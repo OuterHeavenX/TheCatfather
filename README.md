@@ -48,4 +48,22 @@ clean, the browser console should log
 After deploying, hard-refresh — Safari in particular will keep serving the
 cached page for a while.
 
+### index.html is hand-patched
+
+`index.html` carries boot fixes that a plain re-export will overwrite, so
+re-apply them (or diff against the previous `index.html`) after exporting:
+
+- **Storage probe.** Godot mounts `user://` on IndexedDB via
+  `FS.syncfs(true, cb)` with no timeout, and Safari can leave
+  `indexedDB.open()` pending forever. When that happens the engine's init
+  promise never settles *and never rejects* — the splash sits there at 100%
+  with no error. The shell now probes IndexedDB first and, if it doesn't
+  answer within 5s, boots with `persistentPaths: []`: saves stop persisting
+  between sessions, but the game runs.
+- **Stall detection.** A watchdog (120s during download, 45s during engine
+  start) replaces the endless splash with a message naming the stage it got
+  stuck at, bytes downloaded, and storage state.
+- **Stage text** under the progress bar, so "slow" is distinguishable from
+  "wedged".
+
 Cat art: ToffeeCraft free pack — see NOTICE.
