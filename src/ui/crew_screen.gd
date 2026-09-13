@@ -78,6 +78,10 @@ func _row(cat_id: String) -> PanelContainer:
 	fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(fl)
 
+	var role_text := GameData.role_name(String(d.get("role", "")))
+	if role_text != "":
+		vb.add_child(UiKit.label(role_text, 12, UiKit.GOLD_DIM))
+
 	var stats := HBoxContainer.new()
 	stats.add_theme_constant_override("separation", 10)
 	vb.add_child(stats)

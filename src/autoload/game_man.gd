@@ -7,7 +7,7 @@ signal state_changed
 const SAVE_PATH := "user://catfather_save.cfg"
 const WOUND_REST_SECONDS := 90.0
 
-const STARTER_CREW := ["al_catpone", "bugsy_meowsie", "penny_pickpocket"]
+const STARTER_CREW := ["jimmy_twotimes", "al_catpone", "bugsy_meowsie", "penny_pickpocket"]
 
 var treats: int = 100
 var respect: int = 0
@@ -88,6 +88,8 @@ func load_game() -> bool:
 		var cid := String(c["id"])
 		if not cats.has(cid):
 			cats[cid] = {"hired": false, "state": "ready", "wounded_until": 0.0, "heist_id": ""}
+	for pid in GameData.player_cat_ids():
+		cats[pid]["hired"] = true
 	state_changed.emit()
 	return true
 
@@ -126,6 +128,8 @@ func recruitable_cats() -> Array:
 	var out: Array = []
 	for c in GameData.cats():
 		var cid := String(c["id"])
+		if not GameData.is_recruitable(cid):
+			continue
 		if not bool(cats[cid]["hired"]):
 			out.append(cid)
 	return out
@@ -133,6 +137,8 @@ func recruitable_cats() -> Array:
 
 func hire_cat(cat_id: String) -> bool:
 	if not cats.has(cat_id):
+		return false
+	if not GameData.is_recruitable(cat_id):
 		return false
 	if bool(cats[cat_id]["hired"]):
 		return false
