@@ -33,6 +33,15 @@ Notes:
   since the running pose fits.
 - Source sheets are JPEG, so flat colour areas carry mild compression
   noise. Re-matting from lossless originals would be cleaner.
-- Twelve roster cats have no art here: carmela, bella_blade, ma_barker,
+- `carmela` and `sammy_bull` are generated art (SpriteCook, gpt-image-2.5-flare),
+  not part of the original hand-drawn sheets. The source was a JPEG screenshot
+  with a checkerboard painted in, so alpha could not be solved from two plates
+  as above. Instead the background was flood-filled inward from the frame
+  border: every character has a continuous black outline, so interior pixels
+  are unreachable and survive. That matters for Sammy — 56% of his grey fur
+  falls inside the checkerboard's own grey band, and a colour key would have
+  punched holes straight through him.
+
+- Ten roster cats have no art here: carmela, bella_blade, ma_barker,
   bonnie_parker, griselda_widow, vikki_velvet, connie_don, rosie_red,
   penny_pickpocket, lucia_scarfo, trixie_twotoes, sophia_squeeze.
