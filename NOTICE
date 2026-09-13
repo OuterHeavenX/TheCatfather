@@ -12,4 +12,12 @@ License note: the free pack is for PERSONAL USE. If this game is ever
 released commercially, buy the paid pack from the same itch.io page —
 it covers commercial use.
 
+Music: "speakeasy_loop.wav" is synthesised from scratch by
+tools/make_music.py — additive synthesis and filtered noise, no samples
+and no third-party audio. Re-runnable and free of licence obligations.
+
+Mobster cat art in assets/cats/mob/ is separate from the ToffeeCraft pack:
+most was supplied by the author, and carmela/sammy_bull were generated with
+SpriteCook. See assets/cats/mob/README.md for per-file provenance.
+
 Game code (GDScript, project files) is the author's own work.

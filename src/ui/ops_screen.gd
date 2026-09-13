@@ -58,6 +58,8 @@ func refresh() -> void:
 	else:
 		_render_venues()
 
+	UiKit.allow_scroll_drag(self)
+
 
 # ---------------------------------------------------------------- venue list
 

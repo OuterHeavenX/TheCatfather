@@ -57,6 +57,7 @@ func refresh() -> void:
 		return
 	for cid in ids:
 		_list.add_child(_row(cid))
+	UiKit.allow_scroll_drag(self)
 
 
 func _row(cat_id: String) -> PanelContainer:

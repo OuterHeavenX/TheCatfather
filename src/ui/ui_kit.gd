@@ -267,6 +267,25 @@ static func status_bar() -> PanelContainer:
 	mid.add_child(meter("HEAT", GameMan.heat, 100.0, RED))
 	mid.add_child(meter("WAR", GameMan.tension, 100.0, ORANGE))
 
+	var mute := Button.new()
+	mute.text = "♪" if not Jukebox.muted else "♪̸"
+	mute.tooltip_text = "Music on/off"
+	mute.custom_minimum_size = Vector2(30, 26)
+	mute.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	mute.add_theme_font_size_override("font_size", 15)
+	mute.add_theme_color_override("font_color", GOLD if not Jukebox.muted else DIM)
+	mute.add_theme_stylebox_override("normal", _btn_box(PLUM, GOLD_DIM))
+	mute.add_theme_stylebox_override("hover", _btn_box(Color(0.20, 0.13, 0.25), GOLD))
+	mute.add_theme_stylebox_override("pressed", _btn_box(Color(0.10, 0.07, 0.13), GOLD))
+	mute.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	mute.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	mute.pressed.connect(func() -> void:
+		Jukebox.toggle()
+		mute.text = "♪" if not Jukebox.muted else "♪̸"
+		mute.add_theme_color_override("font_color", GOLD if not Jukebox.muted else DIM)
+	)
+	hb.add_child(mute)
+
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 1)
 	hb.add_child(right)
@@ -284,3 +303,14 @@ static func body_text(text: String, size: int = 14, color: Color = CREAM) -> Lab
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return l
+
+
+## A touch drag has to reach the ScrollContainer to scroll the list. Every
+## Control defaults to MOUSE_FILTER_STOP, so panels and rows swallow the drag
+## and only the bare background scrolls. Let everything except buttons pass
+## the event upward.
+static func allow_scroll_drag(node: Node) -> void:
+	for ch in node.get_children():
+		if ch is Control and not (ch is BaseButton) and not (ch is ScrollContainer):
+			(ch as Control).mouse_filter = Control.MOUSE_FILTER_PASS
+		allow_scroll_drag(ch)

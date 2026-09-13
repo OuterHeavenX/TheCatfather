@@ -50,6 +50,7 @@ func refresh() -> void:
 	_list.add_child(UiKit.label("THE CREW", 15, UiKit.GOLD))
 	for cid in GameMan.hired_cats():
 		_list.add_child(_row(String(cid)))
+	UiKit.allow_scroll_drag(self)
 
 
 func _row(cat_id: String) -> PanelContainer:

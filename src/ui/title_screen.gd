@@ -13,19 +13,24 @@ func _ready() -> void:
 	add_child(bg)
 
 	var logo := TextureRect.new()
-	logo.texture = load("res://assets/logo-mark.jpg")
+	logo.texture = load("res://assets/logo-mark.png")
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	logo.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	logo.offset_bottom = 250
+	# Fill everything above the buttons and centre inside it, so the logo sits
+	# properly in a tall portrait window as well as a short landscape one.
+	logo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	logo.offset_bottom = -150
+	logo.offset_left = 12
+	logo.offset_right = -12
+	logo.offset_top = 12
 	add_child(logo)
 
 	# Buttons docked at the bottom, over the logo's empty black band.
 	var bottom := VBoxContainer.new()
 	bottom.add_theme_constant_override("separation", 10)
 	bottom.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	bottom.offset_top = -140
+	bottom.offset_top = -136
 	bottom.offset_bottom = -18
 	bottom.offset_left = 16
 	bottom.offset_right = -16

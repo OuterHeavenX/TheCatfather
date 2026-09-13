@@ -124,6 +124,8 @@ func _render() -> void:
 			ob.pressed.connect(_finish)
 			_buttons.add_child(ob)
 
+	UiKit.allow_scroll_drag(self)
+
 
 func _next_label() -> String:
 	var choices: Array = _beat.get("choices", [])

@@ -8,6 +8,7 @@ var main: Main
 var _root: VBoxContainer
 var _bar_slot: MarginContainer
 var _body: VBoxContainer
+var _footer: VBoxContainer
 
 
 func _ready() -> void:
@@ -36,6 +37,12 @@ func _ready() -> void:
 	_body.add_theme_constant_override("separation", 6)
 	scroll.add_child(_body)
 
+	# Pinned to the bottom of the screen, so a tall portrait window reads as
+	# laid out rather than as content stranded at the top.
+	_footer = VBoxContainer.new()
+	_footer.add_theme_constant_override("separation", 6)
+	_root.add_child(_footer)
+
 
 func refresh() -> void:
 	for ch in _bar_slot.get_children():
@@ -53,9 +60,12 @@ func refresh() -> void:
 		if stash_panel != null:
 			_body.add_child(stash_panel)
 
+	for ch in _footer.get_children():
+		ch.queue_free()
+
 	var nav := HBoxContainer.new()
 	nav.add_theme_constant_override("separation", 6)
-	_body.add_child(nav)
+	_footer.add_child(nav)
 
 	var crew := UiKit.button("CREW")
 	crew.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -70,7 +80,9 @@ func refresh() -> void:
 	var go := UiKit.gold_button("SEND THE CREW OUT >")
 	go.custom_minimum_size = Vector2(0, 36)
 	go.pressed.connect(func() -> void: main.show_screen("ops"))
-	_body.add_child(go)
+	_footer.add_child(go)
+
+	UiKit.allow_scroll_drag(self)
 
 
 func _panel(title: String) -> Array:

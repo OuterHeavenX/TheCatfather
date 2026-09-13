@@ -51,6 +51,7 @@ func refresh() -> void:
 	var r := GameMan.last_report
 	if r.is_empty():
 		_body.add_child(UiKit.label("Nothing on the books yet.", 14, UiKit.DIM))
+		UiKit.allow_scroll_drag(self)
 		return
 
 	_body.add_child(UiKit.label("NIGHT — THE LEDGER, DAY %d" % int(r["day"]), 15, UiKit.GOLD))
@@ -93,6 +94,8 @@ func refresh() -> void:
 		pv.add_child(UiKit.label("THE ALLEY SYNDICATE ANSWERS", 13, UiKit.RED))
 		pv.add_child(UiKit.body_text(String(r["rival"]), 12, UiKit.CREAM))
 		_body.add_child(panel)
+
+	UiKit.allow_scroll_drag(self)
 
 
 func _op_panel(o: Dictionary) -> PanelContainer:

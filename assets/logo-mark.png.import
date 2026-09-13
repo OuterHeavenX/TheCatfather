@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://xgc3ewdfo4mh"
-path="res://.godot/imported/logo-mark.jpg-80512c5ece6d76b2393b3868832e5cbb.ctex"
+uid="uid://brbt8v54meoen"
+path="res://.godot/imported/logo-mark.png-40b4aaad3d231e754285cdacc32dfb41.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/logo-mark.jpg"
-dest_files=["res://.godot/imported/logo-mark.jpg-80512c5ece6d76b2393b3868832e5cbb.ctex"]
+source_file="res://assets/logo-mark.png"
+dest_files=["res://.godot/imported/logo-mark.png-40b4aaad3d231e754285cdacc32dfb41.ctex"]
 
 [params]
 
