@@ -86,6 +86,8 @@ func _row(cat_id: String) -> PanelContainer:
 	if int(c["level"]) < GameMan.MAX_LEVEL:
 		vb.add_child(UiKit.meter("XP", float(c["xp"]), float(GameMan.xp_to_next(cat_id)), UiKit.INK_BLUE, 80))
 	vb.add_child(UiKit.meter("LOYAL", float(c["loyalty"]), 100.0, _loyalty_color(int(c["loyalty"])), 80))
+	vb.add_child(UiKit.meter("ENERGY %d/%d" % [GameMan.energy(cat_id), GameMan.energy_max(cat_id)],
+		float(GameMan.energy(cat_id)), float(GameMan.energy_max(cat_id)), UiKit.INK_GREEN, 80))
 
 	var stats := HBoxContainer.new()
 	stats.add_theme_constant_override("separation", 8)
@@ -95,12 +97,30 @@ func _row(cat_id: String) -> PanelContainer:
 	stats.add_child(UiKit.label("C %.1f" % GameMan.effective_stat(cat_id, "charm"), 12, UiKit.INK))
 	stats.add_child(UiKit.label("cut %d T" % GameMan.cat_cut(cat_id), 12, UiKit.INK_DIM))
 
+	var gym := GameMan.trained(cat_id, "muscle") + GameMan.trained(cat_id, "sneak") \
+		+ GameMan.trained(cat_id, "charm")
+	if gym > 0.005:
+		vb.add_child(UiKit.body_text("Gym work: M +%.2f  S +%.2f  C +%.2f"
+			% [GameMan.trained(cat_id, "muscle"), GameMan.trained(cat_id, "sneak"),
+				GameMan.trained(cat_id, "charm")], 11, UiKit.INK_GREEN))
+
 	var trait_key := String(d.get("trait", ""))
 	if trait_key != "":
 		vb.add_child(UiKit.body_text(GameData.trait_name(trait_key), 11, UiKit.INK_BLUE))
 
 	vb.add_child(_gear_row(cat_id))
 	vb.add_child(UiKit.state_badge(cat_id))
+
+	if GameMan.cat_state(cat_id) == "jail":
+		var cost := GameMan.bail_cost(cat_id)
+		var bail: Button = UiKit.button("POST BAIL (%d T)" % cost)
+		bail.custom_minimum_size = Vector2(0, 26)
+		bail.disabled = GameMan.treats < cost
+		bail.pressed.connect(func() -> void:
+			GameMan.post_bail(cat_id)
+			refresh()
+		)
+		vb.add_child(bail)
 
 	if GameMan.cat_state(cat_id) == "wounded" and GameMan.stash_count("salmon") > 0:
 		var heal: Button = UiKit.button("PATCH UP (Grade-A Salmon)")
@@ -113,9 +133,12 @@ func _row(cat_id: String) -> PanelContainer:
 	return p
 
 
-func _gear_row(cat_id: String) -> HBoxContainer:
-	var hb := HBoxContainer.new()
-	hb.add_theme_constant_override("separation", 4)
+## The Fence sells enough gear now that this has to wrap rather than push the
+## whole crew sheet wider than a phone.
+func _gear_row(cat_id: String) -> HFlowContainer:
+	var hb := HFlowContainer.new()
+	hb.add_theme_constant_override("h_separation", 4)
+	hb.add_theme_constant_override("v_separation", 2)
 	var worn := String(GameMan.cats[cat_id]["gear"])
 	if worn != "":
 		hb.add_child(UiKit.body_text("Wearing: " + String(WorldData.item_by_id(worn)["name"]), 11, UiKit.INK_GREEN))

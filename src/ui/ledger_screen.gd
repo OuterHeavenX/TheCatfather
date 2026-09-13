@@ -137,6 +137,8 @@ func _money_panel(r: Dictionary) -> PanelContainer:
 
 	vb.add_child(_line("Job takings", int(r["takings"]), UiKit.INK))
 	vb.add_child(_line("Protection money", int(r["protection"]), UiKit.INK))
+	if int(r.get("holdings", 0)) > 0:
+		vb.add_child(_line("Holdings", int(r["holdings"]), UiKit.INK))
 	vb.add_child(_line("Crew payroll", -int(r["payout"]), UiKit.INK))
 	vb.add_child(_line("Police bribes", -int(r["bribes"]), UiKit.INK))
 	vb.add_child(UiKit.hsep())

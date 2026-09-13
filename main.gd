@@ -28,6 +28,9 @@ func _ready() -> void:
 	_add_screen("ops", OpsScreen.new())
 	_add_screen("ledger", LedgerScreen.new())
 	_add_screen("crew", CrewScreen.new())
+	_add_screen("gym", GymScreen.new())
+	_add_screen("racket", RacketScreen.new())
+	_add_screen("fence", FenceScreen.new())
 	_add_screen("recruit", RecruitScreen.new())
 	show_screen("title")
 

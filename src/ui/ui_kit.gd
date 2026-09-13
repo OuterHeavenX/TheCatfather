@@ -286,6 +286,9 @@ static func hsep() -> HSeparator:
 ## Always drawn inside a parchment card, so these are ink tones.
 static func state_badge(cat_id: String) -> Label:
 	match GameMan.cat_state(cat_id):
+		"jail":
+			var held := int(GameMan.cats[cat_id]["jail_days"])
+			return caps_label("INSIDE (%d day%s)" % [held, "" if held == 1 else "s"], 13, OXBLOOD)
 		"ready":
 			return caps_label("READY", 13, INK_GREEN)
 		"assigned":

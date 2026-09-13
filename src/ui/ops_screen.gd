@@ -202,7 +202,8 @@ func _render_picker() -> void:
 	var v := WorldData.venue_by_id(_picking_venue)
 	_body.add_child(UiKit.screen_header("%s — %s" % [String(v["name"]), WorldData.op_label(_picking_op)]))
 	var stat: String = String(v["collect_stat"]) if _picking_op == WorldData.OP_COLLECT else String(v["shake_stat"])
-	_body.add_child(UiKit.label("Job tests %s. Pick who goes." % GameData.STAT_LABELS.get(stat, stat), 12, UiKit.DIM))
+	_body.add_child(UiKit.label("Job tests %s. Pick who goes — it costs %d energy."
+		% [GameData.STAT_LABELS.get(stat, stat), GameMan.JOB_ENERGY], 12, UiKit.DIM))
 
 	var free: Array = []
 	for cid in GameMan.hired_cats():
@@ -210,7 +211,8 @@ func _render_picker() -> void:
 			free.append(cid)
 
 	if free.is_empty():
-		_body.add_child(UiKit.label("Nobody left to send. Everyone is out or licking wounds.", 13, UiKit.DIM))
+		_body.add_child(UiKit.label(
+			"Nobody left to send. Everyone is out, laid up, inside, or spent.", 13, UiKit.DIM))
 
 	for cid in free:
 		_body.add_child(_pick_row(String(cid), stat))
@@ -240,9 +242,9 @@ func _pick_row(cat_id: String, stat: String) -> PanelContainer:
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_child(vb)
 	vb.add_child(UiKit.label(String(d["name"]), 14, UiKit.INK_GOLD))
-	vb.add_child(UiKit.label("LV %d  ·  %s %.1f"
+	vb.add_child(UiKit.label("LV %d  ·  %s %.1f  ·  energy %d"
 		% [int(GameMan.cats[cat_id]["level"]), GameData.STAT_LABELS.get(stat, stat),
-			GameMan.effective_stat(cat_id, stat)], 12, UiKit.INK))
+			GameMan.effective_stat(cat_id, stat), GameMan.energy(cat_id)], 12, UiKit.INK))
 	var trait_key := String(d.get("trait", ""))
 	if trait_key != "":
 		vb.add_child(UiKit.body_text(GameData.trait_name(trait_key), 11, UiKit.INK_BLUE))
@@ -250,6 +252,7 @@ func _pick_row(cat_id: String, stat: String) -> PanelContainer:
 	var b := UiKit.gold_button("SEND")
 	b.custom_minimum_size = Vector2(74, 40)
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	b.disabled = GameMan.energy(cat_id) < GameMan.JOB_ENERGY
 	b.pressed.connect(func() -> void:
 		GameMan.assign_cat(cat_id, _picking_venue, _picking_op)
 		_picking_venue = ""

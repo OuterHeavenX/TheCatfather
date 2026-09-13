@@ -53,6 +53,7 @@ func refresh() -> void:
 
 	_body.add_child(UiKit.screen_header("Speakeasy Desk"))
 
+	_body.add_child(_standing_panel())
 	_body.add_child(_tariff_panel())
 	_body.add_child(_payroll_panel())
 	if not GameMan.stash.is_empty():
@@ -63,19 +64,22 @@ func refresh() -> void:
 	for ch in _footer.get_children():
 		ch.queue_free()
 
-	var nav := HBoxContainer.new()
-	nav.add_theme_constant_override("separation", 6)
+	# Five ways out of the office, so three to a row rather than one long strip
+	# that a phone cannot fit.
+	var nav := GridContainer.new()
+	nav.columns = 3
+	nav.add_theme_constant_override("h_separation", 6)
+	nav.add_theme_constant_override("v_separation", 6)
 	_footer.add_child(nav)
 
-	var crew := UiKit.button("CREW")
-	crew.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	crew.pressed.connect(func() -> void: main.show_screen("crew"))
-	nav.add_child(crew)
-
-	var rec := UiKit.button("RECRUIT")
-	rec.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rec.pressed.connect(func() -> void: main.show_screen("recruit"))
-	nav.add_child(rec)
+	for entry in [["CREW", "crew"], ["RECRUIT", "recruit"], ["GYM", "gym"],
+			["RACKET", "racket"], ["FENCE", "fence"]]:
+		var screen_id := String(entry[1])
+		var b := UiKit.button(String(entry[0]))
+		b.add_theme_font_size_override("font_size", 13)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(func() -> void: main.show_screen(screen_id))
+		nav.add_child(b)
 
 	var go := UiKit.gold_button("SEND THE CREW OUT >")
 	go.custom_minimum_size = Vector2(0, 36)
@@ -93,6 +97,29 @@ func _panel(title: String) -> Array:
 	p.add_child(vb)
 	vb.add_child(UiKit.label(title, 14, UiKit.INK_GOLD))
 	return [p, vb]
+
+
+## What the house has to spend today, beyond the money in the tin.
+func _standing_panel() -> PanelContainer:
+	var parts := _panel("WHAT THERE IS TO SPEND")
+	var p: PanelContainer = parts[0]
+	var vb: VBoxContainer = parts[1]
+
+	var pool := 0
+	var fit := 0
+	for cid in GameMan.hired_cats():
+		if GameMan.is_cat_available(String(cid)):
+			fit += 1
+			pool += GameMan.energy(String(cid))
+
+	vb.add_child(UiKit.meter("NERVE %d/%d" % [GameMan.nerve, GameMan.nerve_max()],
+		float(GameMan.nerve), float(GameMan.nerve_max()), UiKit.INK_GOLD, 80))
+	vb.add_child(UiKit.body_text("%d cats fit to work, %d energy between them."
+		% [fit, pool], 12, UiKit.INK))
+	var holdings := GameMan.holdings_income()
+	if holdings > 0:
+		vb.add_child(UiKit.body_text("Holdings bring in %d T tonight." % holdings, 12, UiKit.INK_GREEN))
+	return p
 
 
 func _tariff_panel() -> PanelContainer:
@@ -181,8 +208,9 @@ func _stash_panel() -> PanelContainer:
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
 		info.add_child(UiKit.label("%s x%d" % [String(item["name"]), n], 13, UiKit.INK))
-		info.add_child(UiKit.label(String(item["desc"]), 11, UiKit.INK_DIM))
-		if String(item["kind"]) == "use" and String(item["stat"]) != "heal":
+		info.add_child(UiKit.body_text(String(item["desc"]), 11, UiKit.INK_DIM))
+		var stat_key := String(item["stat"])
+		if String(item["kind"]) == "use" and not stat_key in ["heal", "train"]:
 			var ub := UiKit.button("USE")
 			ub.custom_minimum_size = Vector2(62, 26)
 			ub.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -192,7 +220,7 @@ func _stash_panel() -> PanelContainer:
 			)
 			row.add_child(ub)
 		else:
-			var l := UiKit.label("in CREW", 11, UiKit.INK_DIM)
+			var l := UiKit.label("at the GYM" if stat_key == "train" else "in CREW", 11, UiKit.INK_DIM)
 			l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			row.add_child(l)
 	if not any:

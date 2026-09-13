@@ -23,6 +23,18 @@ Each day runs in three phases:
    totalled. Unpaid crews lose loyalty and eventually walk. When war tension
    runs hot, the Alley Syndicate hits back and blocks change hands.
 
+Between the desk and the blocks sit the parts that take weeks rather than a
+day. Every cat has **energy** — their whole day in points — and the house has
+one pool of **nerve**, spent only on crime and refilled only by sleeping on it.
+At **the Alley Gym** stats are put on a session at a time, each point smaller
+and dearer than the last. **The Racket** is twelve solo jobs in four tiers that
+resolve the moment you commit them; running the same job over and over is what
+makes it safe, and banked experience is the only thing that opens the tier
+above. Botch one and your cat may not come home that night. **The Fence** sells
+gear at a price that moves overnight, and the holdings above it — a flophouse,
+a garage, a bathhouse, a social club, a back-room bank — are bought once and
+quietly bend a rule of the game for as long as you hold them.
+
 Nine story chapters unfold across the first sixteen days, with choices that
 decide where you land: with the Don, with Carmela, or on top of both.
 
@@ -31,10 +43,12 @@ decide where you land: with the Don, with Carmela, or on top of both.
 - Godot 4.7.2, GL Compatibility renderer, 640x360 canvas_items stretch
 - `src/autoload/game_man.gd` — empire state, the day cycle, save/load
 - `src/data/game_data.gd` — 25-cat roster, traits, rank ladder
-- `src/data/world_data.gd` — venues, tariffs, loot
+- `src/data/world_data.gd` — venues, tariffs, items, gym regimens, holdings
+- `src/data/crime_data.gd` — The Racket: twelve solo jobs in four tiers
 - `src/data/story_data.gd` — story beats and branching choices
 - `src/ui/` — code-built screens: title, story, desk, ops, ledger, crew,
-  recruit
+  recruit, gym, racket, fence
+- `tests/smoke.tscn` — headless smoke test (excluded from the web export)
 - Web export: repo root (`index.html`, `index.js`, `index.wasm`, `index.pck`),
   served by GitHub Pages
 
@@ -43,7 +57,15 @@ Headless checks, which need no display:
 ```sh
 godot --headless --path . --import          # generate .import files
 godot --headless --path . --quit-after 90   # boot the main scene
+godot --headless --path . tests/smoke.tscn  # drive the systems; exits 1 on a failure
+python3 tools/check_glyphs.py               # no typed character missing from a font
 ```
+
+`tests/smoke.tscn` also measures what every screen demands in width and fails
+if anything needs more than the 440 logical pixels a phone held upright gets.
+A ScrollContainer reports a tiny minimum of its own, so that number has to be
+walked out of the tree by hand — see `_widest()` — but it is the check that
+catches portrait overflow before a player does.
 
 ## Web export: keep Thread Support OFF
 

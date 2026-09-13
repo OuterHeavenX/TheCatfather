@@ -17,6 +17,22 @@ const MAX_LEVEL := 5
 const XP_PER_LEVEL := 40
 const WOUND_DAYS := 2
 
+## Energy is a cat's day. A job takes most of it; a session at the gym or a
+## run at The Racket takes the rest. Nobody does everything in one day.
+const ENERGY_BASE := 8
+const JOB_ENERGY := 4
+const TRAIN_ENERGY := 3
+
+## Nerve is yours, not theirs. It is the ceiling on how much crime the whole
+## house can get up to before morning.
+const NERVE_BASE_MAX := 10
+const NERVE_REGEN := 4
+
+const TRAIN_GAIN := 0.30
+const TRAIN_FALLOFF := 0.45
+const TRAIN_FLOOR := 0.05
+const TRAIN_FEE := 12
+
 var day: int = 1
 var phase: String = PHASE_DESK
 var treats: int = 240
@@ -26,10 +42,15 @@ var tension: float = 20.0
 var payout_level: int = 1
 var started: bool = false
 
+var nerve: int = NERVE_BASE_MAX
+
 var tariffs: Dictionary = {}
 var venues: Dictionary = {}
 var cats: Dictionary = {}
 var stash: Dictionary = {}
+var properties: Array = []
+var prices: Dictionary = {}
+var crime_xp: Dictionary = {}
 
 var story_seen: Array = []
 var story_flags: Array = []
@@ -56,6 +77,7 @@ func new_game() -> void:
 	heat = 0.0
 	tension = 20.0
 	payout_level = 1
+	nerve = NERVE_BASE_MAX
 	started = true
 	story_seen.clear()
 	story_flags.clear()
@@ -71,6 +93,9 @@ func new_game() -> void:
 		venues[String(v["id"])] = {"controlled": false, "unrest": 0.0}
 
 	stash.clear()
+	properties.clear()
+	crime_xp.clear()
+	_roll_prices()
 
 	cats.clear()
 	for c in GameData.cats():
@@ -90,6 +115,10 @@ func _fresh_cat(hired: bool) -> Dictionary:
 		"gear": "",
 		"venue": "",
 		"op": "",
+		"energy": ENERGY_BASE + 1,
+		"jail_days": 0,
+		"boosted": false,
+		"train": {"muscle": 0.0, "sneak": 0.0, "charm": 0.0},
 	}
 
 
@@ -107,6 +136,10 @@ func save_game() -> void:
 	cfg.set_value("game", "venues", venues)
 	cfg.set_value("game", "cats", cats)
 	cfg.set_value("game", "stash", stash)
+	cfg.set_value("game", "nerve", nerve)
+	cfg.set_value("game", "properties", properties)
+	cfg.set_value("game", "prices", prices)
+	cfg.set_value("game", "crime_xp", crime_xp)
 	cfg.set_value("story", "seen", story_seen)
 	cfg.set_value("story", "flags", story_flags)
 	cfg.set_value("story", "align", align)
@@ -131,6 +164,10 @@ func load_game() -> bool:
 	venues = cfg.get_value("game", "venues", {})
 	cats = cfg.get_value("game", "cats", {})
 	stash = cfg.get_value("game", "stash", {})
+	nerve = int(cfg.get_value("game", "nerve", NERVE_BASE_MAX))
+	properties = cfg.get_value("game", "properties", [])
+	prices = cfg.get_value("game", "prices", {})
+	crime_xp = cfg.get_value("game", "crime_xp", {})
 	story_seen = cfg.get_value("story", "seen", [])
 	story_flags = cfg.get_value("story", "flags", [])
 	align = String(cfg.get_value("story", "align", ""))
@@ -150,6 +187,14 @@ func load_game() -> bool:
 			cats[cid] = _fresh_cat(false)
 	for pid in GameData.player_cat_ids():
 		cats[pid]["hired"] = true
+	# A save from before The Racket has none of the new per-cat fields.
+	var blank := _fresh_cat(false)
+	for cid2 in cats.keys():
+		for key in ["energy", "jail_days", "boosted", "train"]:
+			if not cats[cid2].has(key):
+				cats[cid2][key] = blank[key] if key != "train" else blank[key].duplicate()
+	if prices.is_empty():
+		_roll_prices()
 	state_changed.emit()
 	return true
 
@@ -226,6 +271,8 @@ func recruitable_cats() -> Array:
 
 func cat_state(cat_id: String) -> String:
 	var c: Dictionary = cats[cat_id]
+	if int(c.get("jail_days", 0)) > 0:
+		return "jail"
 	if int(c["wounded_days"]) > 0:
 		return "wounded"
 	if String(c["venue"]) != "":
@@ -234,7 +281,9 @@ func cat_state(cat_id: String) -> String:
 
 
 func is_cat_available(cat_id: String) -> bool:
-	return bool(cats[cat_id]["hired"]) and int(cats[cat_id]["wounded_days"]) == 0
+	return bool(cats[cat_id]["hired"]) \
+		and int(cats[cat_id]["wounded_days"]) == 0 \
+		and int(cats[cat_id].get("jail_days", 0)) == 0
 
 
 func hire_cat(cat_id: String) -> bool:
@@ -272,6 +321,7 @@ func effective_stat(cat_id: String, stat: String) -> float:
 		"all":
 			base = (float(d["muscle"]) + float(d["sneak"]) + float(d["charm"])) / 3.0
 	base += float(int(cats[cat_id]["level"]) - 1) * 0.5
+	base += trained(cat_id, stat)
 	var gear_id := String(cats[cat_id]["gear"])
 	if gear_id != "":
 		var item := WorldData.item_by_id(gear_id)
@@ -324,6 +374,289 @@ func nightly_payout() -> int:
 
 func nightly_bribes() -> int:
 	return int(round(heat * WorldData.HEAT_BRIBE_PER_POINT))
+
+
+# ---------------------------------------------------------------- energy
+
+## A cat's whole day, in points. Levels and a bed of their own buy more of it.
+func energy_max(cat_id: String) -> int:
+	var e := ENERGY_BASE + int(cats[cat_id]["level"])
+	if has_property("flophouse"):
+		e += 1
+	return e
+
+
+func energy(cat_id: String) -> int:
+	return clampi(int(cats[cat_id].get("energy", 0)), 0, energy_max(cat_id))
+
+
+func spend_energy(cat_id: String, amount: int) -> bool:
+	if energy(cat_id) < amount:
+		return false
+	cats[cat_id]["energy"] = energy(cat_id) - amount
+	return true
+
+
+func nerve_max() -> int:
+	return NERVE_BASE_MAX + (3 if has_property("social_club") else 0)
+
+
+func nerve_regen() -> int:
+	return NERVE_REGEN + (3 if has_property("social_club") else 0)
+
+
+# ---------------------------------------------------------------- the gym
+
+## Points put on at the gym, on top of whatever the cat was born with.
+func trained(cat_id: String, stat: String) -> float:
+	var t: Dictionary = cats[cat_id].get("train", {})
+	match stat:
+		"muscle", "sneak", "charm":
+			return float(t.get(stat, 0.0))
+		"muscle_charm":
+			return (float(t.get("muscle", 0.0)) + float(t.get("charm", 0.0))) * 0.5
+		"all":
+			return (float(t.get("muscle", 0.0)) + float(t.get("sneak", 0.0))
+				+ float(t.get("charm", 0.0))) / 3.0
+	return 0.0
+
+
+## Each point already trained makes the next one smaller. The wall is real.
+func train_gain(cat_id: String, stat: String) -> float:
+	var have := trained(cat_id, stat)
+	return maxf(TRAIN_FLOOR, TRAIN_GAIN / (1.0 + have * TRAIN_FALLOFF))
+
+
+func train_fee(cat_id: String, stat: String) -> int:
+	return TRAIN_FEE + int(round(trained(cat_id, stat) * 26.0))
+
+
+## Returns a line for the gym to print, or "" if the session could not happen.
+func train_cat(cat_id: String, stat: String) -> String:
+	if not is_cat_available(cat_id):
+		return ""
+	var fee := train_fee(cat_id, stat)
+	if treats < fee or energy(cat_id) < TRAIN_ENERGY:
+		return ""
+	treats -= fee
+	spend_energy(cat_id, TRAIN_ENERGY)
+	var gain := train_gain(cat_id, stat)
+	var boosted := bool(cats[cat_id].get("boosted", false))
+	if boosted:
+		gain *= 2.0
+		cats[cat_id]["boosted"] = false
+	var t: Dictionary = cats[cat_id]["train"]
+	t[stat] = float(t.get(stat, 0.0)) + gain
+	add_xp(cat_id, 3)
+	save_game()
+	state_changed.emit()
+	var who := String(GameData.cat_by_id(cat_id)["name"])
+	var line := "%s put on %+.2f %s." % [who, gain, GameData.STAT_LABELS.get(stat, stat)]
+	if boosted:
+		line += " The catnip did its work."
+	return line
+
+
+# ---------------------------------------------------------------- the racket
+
+func crime_runs(crime_id: String) -> int:
+	return int(crime_xp.get(crime_id, 0))
+
+
+## Experience banked across every crime in a tier — the key to the tier above.
+func tier_xp(tier: int) -> int:
+	var total := 0
+	for c in CrimeData.crimes_in_tier(tier):
+		var cd := CrimeData.crime_by_id(String(c["id"]))
+		total += crime_runs(String(c["id"])) * int(cd["xp"])
+	return total
+
+
+func crime_unlocked(crime_id: String) -> bool:
+	var c := CrimeData.crime_by_id(crime_id)
+	if c.is_empty():
+		return false
+	var tier := int(c["tier"])
+	if tier == 0:
+		return true
+	return tier_xp(tier - 1) >= CrimeData.TIER_REQ[tier]
+
+
+## Odds for one cat on one crime. Doing the same job over and over is what
+## makes it safe; nothing else moves the number this much.
+func crime_chance(cat_id: String, crime_id: String) -> float:
+	var c := CrimeData.crime_by_id(crime_id)
+	if c.is_empty() or cat_id == "":
+		return 0.0
+	var power := effective_stat(cat_id, String(c["stat"]))
+	var trait_key := String(GameData.cat_by_id(cat_id).get("trait", ""))
+	if trait_key == "lucky":
+		power += 1.5
+	var practice := minf(0.22, float(crime_runs(crime_id)) * 0.022)
+	var base := 0.42 + 0.075 * (power - float(c["difficulty"])) + practice
+	base -= heat / 400.0
+	return clampf(base, 0.05, 0.95)
+
+
+func crime_pay_range(crime_id: String) -> Vector2i:
+	var c := CrimeData.crime_by_id(crime_id)
+	if c.is_empty():
+		return Vector2i.ZERO
+	var pay: Array = c["pay"]
+	var m := 1.12 if has_property("garage") else 1.0
+	return Vector2i(int(round(float(pay[0]) * m)), int(round(float(pay[1]) * m)))
+
+
+func can_commit(cat_id: String, crime_id: String) -> bool:
+	var c := CrimeData.crime_by_id(crime_id)
+	if c.is_empty() or not crime_unlocked(crime_id):
+		return false
+	if not is_cat_available(cat_id):
+		return false
+	return nerve >= int(c["nerve"]) and energy(cat_id) >= int(c["energy"])
+
+
+## Crimes resolve the moment you commit them — this is the loop inside the day.
+func commit_crime(cat_id: String, crime_id: String) -> Dictionary:
+	if not can_commit(cat_id, crime_id):
+		return {}
+	var c := CrimeData.crime_by_id(crime_id)
+	nerve -= int(c["nerve"])
+	spend_energy(cat_id, int(c["energy"]))
+	crime_xp[crime_id] = crime_runs(crime_id) + 1
+
+	var chance := crime_chance(cat_id, crime_id)
+	var success := randf() < chance
+	var out := {
+		"crime": crime_id, "cat": cat_id, "success": success, "chance": chance,
+		"take": 0, "jailed": 0, "levelled": false, "text": "",
+	}
+
+	if success:
+		var r := crime_pay_range(crime_id)
+		var take := r.x + randi() % maxi(1, r.y - r.x + 1)
+		if String(GameData.cat_by_id(cat_id).get("trait", "")) == "double_treats":
+			take = int(round(float(take) * 1.25))
+		treats += take
+		out["take"] = take
+		heat = clampf(heat + float(c["heat"]), 0.0, 100.0)
+		out["text"] = "Clean. %+d treats." % take
+	else:
+		heat = clampf(heat + maxf(0.0, float(c["heat"])) * 0.6 + 2.0, 0.0, 100.0)
+		out["text"] = CrimeData.fumble(crime_id)
+		var jail_risk := float(c["jail"])
+		if String(GameData.cat_by_id(cat_id).get("trait", "")) == "unlucky":
+			jail_risk += 0.10
+		if randf() < jail_risk:
+			var days := 2 + int(c["tier"]) / 2
+			cats[cat_id]["jail_days"] = days
+			out["jailed"] = days
+			cats[cat_id]["venue"] = ""
+			cats[cat_id]["op"] = ""
+
+	out["levelled"] = add_xp(cat_id, int(c["xp"]) * (2 if success else 1))
+	save_game()
+	state_changed.emit()
+	return out
+
+
+func bail_cost(cat_id: String) -> int:
+	return int(cats[cat_id].get("jail_days", 0)) * CrimeData.JAIL_BAIL_PER_DAY
+
+
+## Money talks to a desk sergeant the same as to anyone else.
+func post_bail(cat_id: String) -> bool:
+	var cost := bail_cost(cat_id)
+	if cost <= 0 or treats < cost:
+		return false
+	treats -= cost
+	cats[cat_id]["jail_days"] = 0
+	save_game()
+	state_changed.emit()
+	return true
+
+
+# ---------------------------------------------------------------- the fence
+
+## Prices drift overnight, so the Fence is somewhere you watch, not a shop.
+func _roll_prices() -> void:
+	prices.clear()
+	for item in WorldData.items():
+		prices[String(item["id"])] = snappedf(randf_range(0.78, 1.28), 0.01)
+
+
+func price_mod(item_id: String) -> float:
+	return float(prices.get(item_id, 1.0))
+
+
+func buy_price(item_id: String) -> int:
+	var item := WorldData.item_by_id(item_id)
+	var listed := int(item.get("price", 0))
+	if listed <= 0:
+		return 0
+	return maxi(1, int(round(float(listed) * price_mod(item_id))))
+
+
+func sell_price(item_id: String) -> int:
+	return maxi(1, int(round(float(WorldData.sell_value(item_id)) * price_mod(item_id))))
+
+
+func buy_item(item_id: String) -> bool:
+	var cost := buy_price(item_id)
+	if cost <= 0 or treats < cost:
+		return false
+	treats -= cost
+	stash[item_id] = stash_count(item_id) + 1
+	save_game()
+	state_changed.emit()
+	return true
+
+
+func sell_item(item_id: String) -> bool:
+	if stash_count(item_id) <= 0:
+		return false
+	stash[item_id] = stash_count(item_id) - 1
+	treats += sell_price(item_id)
+	save_game()
+	state_changed.emit()
+	return true
+
+
+# ---------------------------------------------------------------- holdings
+
+func has_property(property_id: String) -> bool:
+	return property_id in properties
+
+
+func can_buy_property(property_id: String) -> bool:
+	var pr := WorldData.property_by_id(property_id)
+	if pr.is_empty() or has_property(property_id):
+		return false
+	return respect >= int(pr["req_respect"]) and treats >= int(pr["cost"])
+
+
+func buy_property(property_id: String) -> bool:
+	if not can_buy_property(property_id):
+		return false
+	var pr := WorldData.property_by_id(property_id)
+	treats -= int(pr["cost"])
+	properties.append(property_id)
+	# A bed and a bath do their work from the moment you hold the keys.
+	if property_id == "flophouse":
+		for cid in hired_cats():
+			cats[cid]["energy"] = energy_max(cid)
+	save_game()
+	state_changed.emit()
+	return true
+
+
+func holdings_income() -> int:
+	var total := 0
+	for pid in properties:
+		var pr := WorldData.property_by_id(String(pid))
+		if not pr.is_empty():
+			total += int(pr["income"])
+	return total
 
 
 # ---------------------------------------------------------------- desk phase
@@ -397,6 +730,8 @@ func assign_cat(cat_id: String, venue_id: String, op: String) -> bool:
 	var existing := venue_op(venue_id)
 	if existing != "" and existing != op:
 		return false
+	if not spend_energy(cat_id, JOB_ENERGY):
+		return false
 	cats[cat_id]["venue"] = venue_id
 	cats[cat_id]["op"] = op
 	save_game()
@@ -405,6 +740,9 @@ func assign_cat(cat_id: String, venue_id: String, op: String) -> bool:
 
 
 func clear_assignment(cat_id: String) -> void:
+	# Pulled off before the day ran, so they get their afternoon back.
+	if String(cats[cat_id]["venue"]) != "":
+		cats[cat_id]["energy"] = mini(energy_max(cat_id), energy(cat_id) + JOB_ENERGY)
 	cats[cat_id]["venue"] = ""
 	cats[cat_id]["op"] = ""
 	save_game()
@@ -466,6 +804,7 @@ func end_day() -> Dictionary:
 		"ops": [],
 		"takings": 0,
 		"protection": 0,
+		"holdings": 0,
 		"payout": 0,
 		"bribes": 0,
 		"net": 0,
@@ -550,7 +889,9 @@ func end_day() -> Dictionary:
 		var calm := 1.0 - float(venues[vid2]["unrest"]) / 150.0
 		report["protection"] = int(report["protection"]) + int(round(float(v["base_yield"]) * 0.30 * mult * maxf(0.2, calm)))
 
-	treats += int(report["takings"]) + int(report["protection"])
+	# 2b. Rent, takings and whatever else the holdings bring in.
+	report["holdings"] = holdings_income()
+	treats += int(report["takings"]) + int(report["protection"]) + int(report["holdings"])
 
 	# 3. Pay the crew, or don't and find out.
 	var payout := nightly_payout()
@@ -573,8 +914,12 @@ func end_day() -> Dictionary:
 	else:
 		heat = clampf(heat + 8.0, 0.0, 100.0)
 
-	report["net"] = int(report["takings"]) + int(report["protection"]) - payout - bribes
+	report["net"] = int(report["takings"]) + int(report["protection"]) \
+		+ int(report["holdings"]) - payout - bribes
 	respect = clampi(respect + int(report["respect_gain"]), 0, 100)
+
+	if has_property("back_room_bank"):
+		heat = maxf(0.0, heat - 4.0)
 
 	# 5. Tariffs anger the neighbourhood and the other house.
 	tension = clampf(tension + daily_tension_gain() - 3.0, 0.0, 100.0)
@@ -599,11 +944,18 @@ func end_day() -> Dictionary:
 			cats[cid]["gear"] = ""
 			report["defected"].append(cid)
 
-	# 8. Roll the day over.
+	# 8. Roll the day over: sentences served, wounds closing, everyone rested.
+	var mend := 2 if has_property("bathhouse") else 1
 	for cid in cats.keys():
 		if int(cats[cid]["wounded_days"]) > 0 and not cid in report["injuries"]:
-			cats[cid]["wounded_days"] = int(cats[cid]["wounded_days"]) - 1
+			cats[cid]["wounded_days"] = maxi(0, int(cats[cid]["wounded_days"]) - mend)
+		if int(cats[cid].get("jail_days", 0)) > 0:
+			cats[cid]["jail_days"] = int(cats[cid]["jail_days"]) - 1
 	clear_all_assignments()
+	for cid in hired_cats():
+		cats[cid]["energy"] = energy_max(cid)
+	nerve = mini(nerve_max(), nerve + nerve_regen())
+	_roll_prices()
 	day += 1
 	phase = PHASE_DESK
 	last_report = report
@@ -674,6 +1026,15 @@ func use_item(item_id: String, cat_id: String = "") -> String:
 				return ""
 			cats[cat_id]["wounded_days"] = 0
 			msg = "%s is back on their paws." % String(GameData.cat_by_id(cat_id)["name"])
+		"train":
+			if cat_id == "" or bool(cats[cat_id].get("boosted", false)):
+				return ""
+			cats[cat_id]["boosted"] = true
+			msg = "%s is wired. Next session counts double." % String(GameData.cat_by_id(cat_id)["name"])
+		"loyalty":
+			for cid in hired_cats():
+				cats[cid]["loyalty"] = clampi(int(cats[cid]["loyalty"]) + int(item["power"]), 0, 100)
+			msg = "Cigars all round. Loyalty +%d across the books." % int(item["power"])
 		_:
 			return ""
 	stash[item_id] = stash_count(item_id) - 1

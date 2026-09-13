@@ -99,3 +99,66 @@ Balance the books at night. Calculate net profits after paying crew cuts and
 local police bribes. High extortion rates cause rival factions (like Carmela's
 Alley Syndicate) to hit back, forcing you to defend your establishments or
 risk losing your daily revenue stream.
+
+## 4. The Long Game
+
+The day cycle above is one afternoon. Underneath it sit four systems that only
+move over weeks, and they are what turns a run into a campaign.
+
+### Energy and Nerve
+
+Every cat has **energy**, which is their whole day in points and comes back at
+dawn. A venue job takes four of it, a session at the gym takes three, and a job
+in The Racket takes between two and eight. So a cat can work a block *or* put
+muscle on *or* pull a job — rarely all three — and every morning is an
+allocation problem rather than a to-do list.
+
+**Nerve** is yours, not theirs: one pool for the whole house, spent only on The
+Racket, refilled by a fixed amount overnight and by nothing else. Money cannot
+buy it. It is the ceiling on how much crime a day can contain.
+
+### The Alley Gym
+
+Stats are no longer handed out by levelling. They are put on at the gym, one
+small session at a time, paid for in a cat's energy and your money:
+
+| Regimen | Trains |
+| --- | --- |
+| The Heavy Bag | MUSCLE |
+| The Fire Escapes | SNEAK |
+| Etiquette Lessons | CHARM |
+
+Every point already trained makes the next one both smaller and dearer, so the
+wall a cat runs into is time, not treats. A tin of catnip doubles one session.
+
+### The Racket
+
+Twelve solo jobs in four tiers — PETTY, ORGANISED, SERIOUS, THE BIG SCORE —
+that resolve the instant you commit them rather than waiting for nightfall.
+Each costs nerve and one cat's energy, tests one stat, and pays a range.
+
+Repeating a job is what makes it safe: every run banks experience in that
+crime, which both improves its odds and counts toward the tier's total.
+**Banked experience is the only thing that opens the tier above it.** Money
+never does.
+
+Botched jobs raise heat, and some of them end with the cat picked up. A jailed
+cat is out of everything — jobs, the gym, The Racket — until the days run down
+or you post bail at seventy treats a day.
+
+### The Fence and the Holdings
+
+Prices move every night, so the Fence is somewhere you watch rather than a
+shop: gear and consumables can be bought when they are cheap and sold back
+when they are dear, at the fence's cut both ways.
+
+Holdings are bought once and paid out every night, and each one quietly bends
+a rule:
+
+| Holding | Rule it bends |
+| --- | --- |
+| The Flophouse | +1 ENERGY a day for every cat |
+| Cassoni's Garage | +12% on every job in The Racket |
+| The Bathhouse | Wounds heal a day sooner |
+| The Social Club | +3 NERVE a night, and a higher ceiling |
+| The Back-Room Bank | HEAT falls 4 faster a night |
