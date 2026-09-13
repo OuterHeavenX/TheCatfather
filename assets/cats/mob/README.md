@@ -1,10 +1,20 @@
 # Mobster cat art
 
-Full-body character art for 13 of the 24 roster cats, matted out of the two
-source sheets (same drawings composited over a checkerboard and over flat
-grey #404040). Alpha was solved from the pair rather than colour-keyed:
-pixels identical in both plates are opaque, pixels that differ are
-background, and the size of the difference gives partial alpha on edges.
+Full-body character art for the roster cats, cut from the supplied sheets.
+
+Provenance differs by file, and it matters for quality:
+
+- **11 cats** (everything except the two below) come from the lossless RGBA
+  sheet at 1697x927 — real alpha, roughly 1.7x the resolution of the first
+  pass. Source alpha topped out at 253, so it is renormalised to a true 255
+  before cutting.
+- **`lucky_clawciano` and `frankie_fastpaws`** still come from the original
+  JPEG pair, which is the only sheet they appear on. Alpha there was solved
+  from two composites (checkerboard and flat grey #404040): pixels identical
+  in both plates are opaque, pixels that differ are background, and the size
+  of the difference gives partial alpha on edges. They are lower resolution
+  and carry mild JPEG noise in flat colour. Replace them if those two ever
+  turn up on a lossless sheet.
 
 Filenames match `id` in `src/data/game_data.gd`.
 
