@@ -445,6 +445,19 @@ func preview_chance(venue_id: String, op: String, crew: Array) -> float:
 	return clampf(0.5 + 0.07 * (power - difficulty) - unrest / 220.0, 0.08, 0.95)
 
 
+## Worst and best take for a job before crew traits, for the jobs card.
+func yield_range(venue_id: String, op: String) -> Vector2i:
+	var v := WorldData.venue_by_id(venue_id)
+	if v.is_empty():
+		return Vector2i.ZERO
+	var top := float(v["base_yield"]) * tariff_multiplier()
+	var botched := 0.35
+	if op == WorldData.OP_SHAKEDOWN:
+		top *= 1.7
+		botched = 0.25
+	return Vector2i(int(round(top * botched)), int(round(top)))
+
+
 # ---------------------------------------------------------------- ledger
 
 func end_day() -> Dictionary:

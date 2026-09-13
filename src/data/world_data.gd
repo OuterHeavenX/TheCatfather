@@ -112,5 +112,27 @@ static func good_by_id(good_id: String) -> Dictionary:
 	return {}
 
 
+## Risk as filled diamonds out of five, for the jobs card.
+static func risk_pips(risk: float) -> int:
+	if risk < 0.15:
+		return 1
+	if risk < 0.20:
+		return 2
+	if risk < 0.28:
+		return 3
+	if risk < 0.36:
+		return 4
+	return 5
+
+
+static func risk_text(risk: float, bonus: float = 0.0) -> String:
+	var n := risk_pips(risk + bonus)
+	return "◆".repeat(n) + "◇".repeat(5 - n)
+
+
+static func venue_icon(venue_id: String) -> String:
+	return "res://assets/ui/gen/venue/%s.png" % venue_id
+
+
 static func op_label(op: String) -> String:
 	return "SHAKEDOWN" if op == OP_SHAKEDOWN else "COLLECTION"
