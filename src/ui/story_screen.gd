@@ -68,7 +68,7 @@ func _speech(speaker: String, text: String) -> VBoxContainer:
 	panel.add_theme_stylebox_override("panel", UiKit.panel_style())
 	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	vb.add_child(panel)
-	panel.add_child(UiKit.body_text(text, 14))
+	panel.add_child(UiKit.body_text(text, 14, UiKit.INK))
 	return vb
 
 
@@ -100,7 +100,7 @@ func _render() -> void:
 
 	var view := get_viewport_rect().size
 	var portrait_mode := view.y > view.x
-	var art_height := clampi(int(view.y * (0.30 if portrait_mode else 0.62)), 110, 250)
+	var art_height := clampi(int(view.y * (0.36 if portrait_mode else 0.62)), 120, 300)
 
 	if portrait_mode:
 		var art := UiKit.body_portrait(who, art_height)

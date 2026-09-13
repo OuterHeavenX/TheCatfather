@@ -23,8 +23,8 @@ const ORANGE = Color("C08A3E")       # tarnished brass, for in-progress states
 # Ink, for text on the parchment cards. The dark palette above is for chrome:
 # wood bars, buttons and the background behind everything.
 const INK = Color("2A2118")          # iron gall ink
-const INK_DIM = Color("6B5B44")      # faded ink, secondary lines
-const INK_GOLD = Color("7A5A12")     # brass struck on paper
+const INK_DIM = Color("61533E")      # faded ink, secondary lines
+const INK_GOLD = Color("6C5010")     # brass struck on paper
 const INK_RED = Color("6B1111")      # Oxblood — finally legible, on paper
 const INK_GREEN = Color("3F5A2A")
 const INK_BLUE = Color("3A4E63")
@@ -72,7 +72,7 @@ static func chip_style() -> StyleBoxTexture:
 ## Parchment stained red, reserved for critical events.
 static func danger_panel_style() -> StyleBoxTexture:
 	var s := panel_style()
-	s.modulate_color = Color(1.0, 0.66, 0.60)
+	s.modulate_color = Color(1.0, 0.70, 0.64)
 	return s
 
 
@@ -258,19 +258,20 @@ static func hsep() -> HSeparator:
 	return s
 
 
+## Always drawn inside a parchment card, so these are ink tones.
 static func state_badge(cat_id: String) -> Label:
 	match GameMan.cat_state(cat_id):
 		"ready":
-			return label("READY", 13, GREEN)
+			return caps_label("READY", 13, INK_GREEN)
 		"assigned":
 			var vid := String(GameMan.cats[cat_id]["venue"])
 			var v := WorldData.venue_by_id(vid)
 			var op := String(GameMan.cats[cat_id]["op"])
-			return label("%s — %s" % [WorldData.op_label(op), String(v.get("name", "")).to_upper()], 13, ORANGE)
+			return caps_label("%s — %s" % [WorldData.op_label(op), String(v.get("name", ""))], 13, INK_GOLD)
 		"wounded":
 			var days := int(GameMan.cats[cat_id]["wounded_days"])
-			return label("LICKING WOUNDS (%d day%s)" % [days, "" if days == 1 else "s"], 13, BLUE)
-	return label("", 13, DIM)
+			return caps_label("LICKING WOUNDS (%d day%s)" % [days, "" if days == 1 else "s"], 13, OXBLOOD)
+	return label("", 13, INK_DIM)
 
 
 ## Full-body art for story scenes; falls back to the roster portrait for cats

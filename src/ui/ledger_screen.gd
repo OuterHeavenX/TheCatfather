@@ -91,8 +91,8 @@ func refresh() -> void:
 		var pv := VBoxContainer.new()
 		pv.add_theme_constant_override("separation", 2)
 		panel.add_child(pv)
-		pv.add_child(UiKit.label("THE ALLEY SYNDICATE ANSWERS", 13, UiKit.RED))
-		pv.add_child(UiKit.body_text(String(r["rival"]), 12, UiKit.CREAM))
+		pv.add_child(UiKit.caps_label("THE ALLEY SYNDICATE ANSWERS", 14, UiKit.OXBLOOD))
+		pv.add_child(UiKit.body_text(String(r["rival"]), 12, UiKit.INK))
 		_body.add_child(panel)
 
 	UiKit.allow_scroll_drag(self)
