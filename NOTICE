@@ -16,6 +16,10 @@ Fonts: Lora, Libre Baskerville and Arsenal SC, all under the SIL Open Font
 License. Each font's OFL.txt sits beside it in assets/fonts/ — keep those
 files with the fonts if the game is redistributed.
 
+Venue scene art (assets/ui/gen/venue/scene_*.png) is cropped from a concept
+sheet supplied by the author. The ink trade signs beside them, and the rest
+of the UI textures, are generated.
+
 UI textures in assets/ui/gen/ (parchment, wood, brass frames) are generated
 by tools/make_textures.py — procedural, no stock art, re-runnable.
 

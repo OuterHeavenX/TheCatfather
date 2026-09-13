@@ -125,8 +125,14 @@ static func risk_pips(risk: float) -> int:
 	return 5
 
 
+## Ink trade sign, shown while a venue is still locked.
 static func venue_icon(venue_id: String) -> String:
 	return "res://assets/ui/gen/venue/%s.png" % venue_id
+
+
+## Painted scene, shown once the venue is workable.
+static func venue_scene(venue_id: String) -> String:
+	return "res://assets/ui/gen/venue/scene_%s.png" % venue_id
 
 
 static func op_label(op: String) -> String:

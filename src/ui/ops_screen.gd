@@ -93,15 +93,16 @@ func _venue_panel(v: Dictionary) -> PanelContainer:
 	outer.add_theme_constant_override("separation", 10)
 	p.add_child(outer)
 
-	# trade sign
+	# A workable venue shows the place itself; a locked one shows only its
+	# trade sign, so the art reads as something you have not got into yet.
 	var sign := TextureRect.new()
-	sign.texture = load(WorldData.venue_icon(vid))
-	sign.custom_minimum_size = Vector2(46, 46)
+	sign.texture = load(WorldData.venue_scene(vid) if unlocked else WorldData.venue_icon(vid))
+	sign.custom_minimum_size = Vector2(58, 58)
 	sign.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	sign.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	sign.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	if not unlocked:
-		sign.modulate = Color(1, 1, 1, 0.30)
+		sign.modulate = Color(1, 1, 1, 0.35)
 	outer.add_child(sign)
 
 	var vb := VBoxContainer.new()
