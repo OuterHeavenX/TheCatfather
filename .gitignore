@@ -1,2 +1,5 @@
 # Godot 4+ editor cache and per-machine state
 .godot/
+
+# Godot web export temp files
+index.pck-*
