@@ -25,7 +25,7 @@ func _ready() -> void:
 	var back := UiKit.back_button("< DESK")
 	back.pressed.connect(func() -> void: main.show_screen("desk"))
 	top.add_child(back)
-	var title := UiKit.label("RECRUIT", 22, UiKit.GOLD)
+	var title := UiKit.display_label("RECRUIT", 20, UiKit.GOLD)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -76,15 +76,15 @@ func _row(cat_id: String) -> PanelContainer:
 	vb.add_theme_constant_override("separation", 2)
 	hb.add_child(vb)
 
-	vb.add_child(UiKit.label(String(d["name"]), 19, UiKit.GOLD))
-	var fl := UiKit.label(String(d["flavor"]), 13, UiKit.DIM)
+	vb.add_child(UiKit.label(String(d["name"]), 19, UiKit.INK_GOLD))
+	var fl := UiKit.label(String(d["flavor"]), 13, UiKit.INK_DIM)
 	fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(fl)
 
 	var role_key := String(d.get("role", ""))
 	var role_text := GameData.role_name(role_key)
 	if role_text != "":
-		vb.add_child(UiKit.label(role_text, 12, UiKit.GOLD_DIM))
+		vb.add_child(UiKit.label(role_text, 12, UiKit.INK_GOLD))
 
 	var stats := HBoxContainer.new()
 	stats.add_theme_constant_override("separation", 10)
@@ -95,9 +95,9 @@ func _row(cat_id: String) -> PanelContainer:
 
 	var trait_key := String(d.get("trait", ""))
 	if trait_key != "":
-		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 12, UiKit.BLUE))
+		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 12, UiKit.INK_BLUE))
 
-	vb.add_child(UiKit.label("Nightly cut: %d T" % (5 + 3 + (6 if String(d.get("role", "")) == "muscle" else (3 if String(d.get("role", "")) == "specialist" else 0))), 11, UiKit.DIM))
+	vb.add_child(UiKit.label("Nightly cut: %d T" % (5 + 3 + (6 if String(d.get("role", "")) == "muscle" else (3 if String(d.get("role", "")) == "specialist" else 0))), 11, UiKit.INK_DIM))
 
 	var hire := UiKit.gold_button("HIRE  %dT" % cost)
 	hire.custom_minimum_size = Vector2(110, 56)

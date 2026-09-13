@@ -20,25 +20,59 @@ const GREEN = Color("8A9A5B")        # bottle green, desaturated to sit with bra
 const BLUE = Color("8298AA")         # slate, for informational notes
 const ORANGE = Color("C08A3E")       # tarnished brass, for in-progress states
 
+# Ink, for text on the parchment cards. The dark palette above is for chrome:
+# wood bars, buttons and the background behind everything.
+const INK = Color("2A2118")          # iron gall ink
+const INK_DIM = Color("6B5B44")      # faded ink, secondary lines
+const INK_GOLD = Color("7A5A12")     # brass struck on paper
+const INK_RED = Color("6B1111")      # Oxblood — finally legible, on paper
+const INK_GREEN = Color("3F5A2A")
+const INK_BLUE = Color("3A4E63")
 
-static func panel_style() -> StyleBoxFlat:
-	var s := StyleBoxFlat.new()
-	s.bg_color = PANEL
-	s.border_color = GOLD_DIM
-	s.set_border_width_all(2)
-	s.set_corner_radius_all(6)
-	s.content_margin_left = 10
-	s.content_margin_right = 10
-	s.content_margin_top = 8
-	s.content_margin_bottom = 8
+const FONT_BODY = "res://assets/fonts/Lora-Regular.ttf"
+const FONT_BOLD = "res://assets/fonts/Lora-Bold.ttf"
+const FONT_DISPLAY = "res://assets/fonts/LibreBaskerville-Regular.ttf"
+const FONT_CAPS = "res://assets/fonts/ArsenalSC-Regular.ttf"
+
+const TEX_DIR = "res://assets/ui/gen/"
+
+
+## 9-patch from a generated texture: the brass border stays crisp while the
+## paper in the middle stretches to whatever the panel needs.
+static func _tex_style(file: String, margin: int = 14, pad_h: int = 10, pad_v: int = 8) -> StyleBoxTexture:
+	var s := StyleBoxTexture.new()
+	s.texture = load(TEX_DIR + file)
+	s.set_texture_margin_all(margin)
+	s.content_margin_left = pad_h
+	s.content_margin_right = pad_h
+	s.content_margin_top = pad_v
+	s.content_margin_bottom = pad_v
 	return s
 
 
-## Oxblood-bordered card, reserved for critical events.
-static func danger_panel_style() -> StyleBoxFlat:
+## Aged ledger paper — the default card.
+static func panel_style() -> StyleBoxTexture:
+	return _tex_style("parchment_framed.png")
+
+
+## Slightly darker stock, for rows nested inside another card.
+static func panel_dim_style() -> StyleBoxTexture:
+	return _tex_style("parchment_dim_framed.png")
+
+
+## Stained wood, for chrome: headers and the status bar.
+static func wood_style(pad_h: int = 10, pad_v: int = 6) -> StyleBoxTexture:
+	return _tex_style("wood_framed.png", 14, pad_h, pad_v)
+
+
+static func chip_style() -> StyleBoxTexture:
+	return _tex_style("chip.png", 12, 8, 4)
+
+
+## Parchment stained red, reserved for critical events.
+static func danger_panel_style() -> StyleBoxTexture:
 	var s := panel_style()
-	s.border_color = OXBLOOD
-	s.bg_color = Color(0.16, 0.09, 0.09)
+	s.modulate_color = Color(1.0, 0.66, 0.60)
 	return s
 
 
@@ -58,6 +92,7 @@ static func _btn_box(bg: Color, border: Color) -> StyleBoxFlat:
 static func button(text: String) -> Button:
 	var b := Button.new()
 	b.text = text
+	b.add_theme_font_override("font", load(FONT_BOLD))
 	b.add_theme_font_size_override("font_size", 17)
 	b.add_theme_color_override("font_color", CREAM)
 	b.add_theme_color_override("font_hover_color", GOLD)
@@ -89,6 +124,39 @@ static func label(text: String, size: int = 16, color: Color = CREAM) -> Label:
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
 	return l
+
+
+## Small-caps display face, for screen titles and card headings.
+static func display_label(text: String, size: int = 18, color: Color = GOLD) -> Label:
+	var l := label(text, size, color)
+	l.add_theme_font_override("font", load(FONT_DISPLAY))
+	return l
+
+
+static func caps_label(text: String, size: int = 14, color: Color = GOLD) -> Label:
+	var l := label(text, size, color)
+	l.add_theme_font_override("font", load(FONT_CAPS))
+	return l
+
+
+## The ornamented screen header from the concepts: wood plate, centred display
+## title, brass rule with a diamond under it.
+static func screen_header(title: String) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", wood_style(12, 6))
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 1)
+	p.add_child(vb)
+	var t := display_label(title.to_upper(), 19, GOLD)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.75))
+	t.add_theme_constant_override("shadow_offset_x", 1)
+	t.add_theme_constant_override("shadow_offset_y", 2)
+	vb.add_child(t)
+	var rule := label("◆", 9, GOLD_DIM)
+	rule.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb.add_child(rule)
+	return p
 
 
 static func title_label(text: String, size: int = 40) -> Label:
@@ -226,9 +294,10 @@ static func body_portrait(cat_id: String, height: int) -> TextureRect:
 static func meter(text: String, value: float, maximum: float, fill_color: Color, width: int = 70) -> HBoxContainer:
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 5)
-	var l := label(text, 12, DIM)
-	l.custom_minimum_size = Vector2(46, 0)
-	hb.add_child(l)
+	if text != "":
+		var l := label(text, 12, DIM)
+		l.custom_minimum_size = Vector2(46, 0)
+		hb.add_child(l)
 	var bar := ProgressBar.new()
 	bar.min_value = 0
 	bar.max_value = maximum
@@ -249,47 +318,63 @@ static func meter(text: String, value: float, maximum: float, fill_color: Color,
 	return hb
 
 
-## The persistent status strip across the top of every management screen.
+## The persistent status strip: brass chips on a wood plate.
+static func _chip(title: String, body: Control) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", chip_style())
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 0)
+	p.add_child(vb)
+	var t := caps_label(title, 10, GOLD_DIM)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb.add_child(t)
+	body.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vb.add_child(body)
+	return p
+
+
 static func status_bar() -> PanelContainer:
 	var p := PanelContainer.new()
-	var box := StyleBoxFlat.new()
-	box.bg_color = SHADOW
-	box.border_color = GOLD_DIM
-	box.set_border_width_all(2)
-	box.set_corner_radius_all(5)
-	box.content_margin_left = 8
-	box.content_margin_right = 8
-	box.content_margin_top = 4
-	box.content_margin_bottom = 4
-	p.add_theme_stylebox_override("panel", box)
+	p.add_theme_stylebox_override("panel", wood_style(8, 4))
 
 	var hb := HBoxContainer.new()
-	hb.add_theme_constant_override("separation", 10)
+	hb.add_theme_constant_override("separation", 5)
 	p.add_child(hb)
 
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 1)
-	hb.add_child(left)
-	left.add_child(label("DAY %d" % GameMan.day, 17, GOLD))
-	left.add_child(label(GameData.rank_name(GameMan.respect), 11, DIM))
+	var day := display_label(str(GameMan.day), 16, CREAM)
+	day.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hb.add_child(_chip("DAY", day))
 
-	var mid := VBoxContainer.new()
-	mid.add_theme_constant_override("separation", 1)
-	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hb.add_child(mid)
-	mid.add_child(meter("HEAT", GameMan.heat, 100.0, OXBLOOD))
-	mid.add_child(meter("WAR", GameMan.tension, 100.0, ORANGE))
+	var cash := display_label("%d T" % GameMan.treats, 16, GOLD)
+	cash.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hb.add_child(_chip("CASH", cash))
+
+	var heat_box := VBoxContainer.new()
+	heat_box.add_theme_constant_override("separation", 0)
+	heat_box.add_child(meter("", GameMan.heat, 100.0, OXBLOOD, 54))
+	hb.add_child(_chip("HEAT", heat_box))
+
+	var war_box := VBoxContainer.new()
+	war_box.add_theme_constant_override("separation", 0)
+	war_box.add_child(meter("", GameMan.tension, 100.0, ORANGE, 54))
+	hb.add_child(_chip("WAR", war_box))
+
+	var rank := caps_label(GameData.rank_name(GameMan.respect), 11, CREAM)
+	rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var rank_chip := _chip("RESPECT %d" % GameMan.respect, rank)
+	rank_chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hb.add_child(rank_chip)
 
 	var mute := Button.new()
 	mute.text = "♪" if not Jukebox.muted else "♪̸"
 	mute.tooltip_text = "Music on/off"
-	mute.custom_minimum_size = Vector2(30, 26)
+	mute.custom_minimum_size = Vector2(30, 30)
 	mute.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	mute.add_theme_font_size_override("font_size", 15)
 	mute.add_theme_color_override("font_color", GOLD if not Jukebox.muted else DIM)
 	mute.add_theme_stylebox_override("normal", _btn_box(SHADOW, GOLD_DIM))
-	mute.add_theme_stylebox_override("hover", _btn_box(Color(0.20, 0.13, 0.25), GOLD))
-	mute.add_theme_stylebox_override("pressed", _btn_box(Color(0.10, 0.07, 0.13), GOLD))
+	mute.add_theme_stylebox_override("hover", _btn_box(Color(0.20, 0.16, 0.10), GOLD))
+	mute.add_theme_stylebox_override("pressed", _btn_box(Color(0.10, 0.08, 0.05), GOLD))
 	mute.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	mute.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	mute.pressed.connect(func() -> void:
@@ -298,16 +383,6 @@ static func status_bar() -> PanelContainer:
 		mute.add_theme_color_override("font_color", GOLD if not Jukebox.muted else DIM)
 	)
 	hb.add_child(mute)
-
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 1)
-	hb.add_child(right)
-	var t := label("%d T" % GameMan.treats, 17, GOLD)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	right.add_child(t)
-	var r := label("RESPECT %d" % GameMan.respect, 11, DIM)
-	r.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	right.add_child(r)
 	return p
 
 

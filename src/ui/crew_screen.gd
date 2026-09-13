@@ -47,7 +47,7 @@ func refresh() -> void:
 	_bar_slot.add_child(UiKit.status_bar())
 	for ch in _list.get_children():
 		ch.queue_free()
-	_list.add_child(UiKit.label("THE CREW", 15, UiKit.GOLD))
+	_list.add_child(UiKit.screen_header("The Crew"))
 	for cid in GameMan.hired_cats():
 		_list.add_child(_row(String(cid)))
 	UiKit.allow_scroll_drag(self)
@@ -73,30 +73,30 @@ func _row(cat_id: String) -> PanelContainer:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 6)
 	vb.add_child(head)
-	var n := UiKit.label(String(d["name"]), 16, UiKit.GOLD)
+	var n := UiKit.label(String(d["name"]), 16, UiKit.INK_GOLD)
 	n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(n)
-	head.add_child(UiKit.label("LV %d" % int(c["level"]), 14, UiKit.CREAM))
+	head.add_child(UiKit.label("LV %d" % int(c["level"]), 14, UiKit.INK))
 
 	var role_text := GameData.role_name(String(d.get("role", "")))
 	if role_text != "":
-		vb.add_child(UiKit.label(role_text, 11, UiKit.GOLD_DIM))
+		vb.add_child(UiKit.label(role_text, 11, UiKit.INK_GOLD))
 
 	if int(c["level"]) < GameMan.MAX_LEVEL:
-		vb.add_child(UiKit.meter("XP", float(c["xp"]), float(GameMan.xp_to_next(cat_id)), UiKit.BLUE, 80))
+		vb.add_child(UiKit.meter("XP", float(c["xp"]), float(GameMan.xp_to_next(cat_id)), UiKit.INK_BLUE, 80))
 	vb.add_child(UiKit.meter("LOYAL", float(c["loyalty"]), 100.0, _loyalty_color(int(c["loyalty"])), 80))
 
 	var stats := HBoxContainer.new()
 	stats.add_theme_constant_override("separation", 8)
 	vb.add_child(stats)
-	stats.add_child(UiKit.label("M %.1f" % GameMan.effective_stat(cat_id, "muscle"), 12, UiKit.CREAM))
-	stats.add_child(UiKit.label("S %.1f" % GameMan.effective_stat(cat_id, "sneak"), 12, UiKit.CREAM))
-	stats.add_child(UiKit.label("C %.1f" % GameMan.effective_stat(cat_id, "charm"), 12, UiKit.CREAM))
-	stats.add_child(UiKit.label("cut %d T" % GameMan.cat_cut(cat_id), 12, UiKit.DIM))
+	stats.add_child(UiKit.label("M %.1f" % GameMan.effective_stat(cat_id, "muscle"), 12, UiKit.INK))
+	stats.add_child(UiKit.label("S %.1f" % GameMan.effective_stat(cat_id, "sneak"), 12, UiKit.INK))
+	stats.add_child(UiKit.label("C %.1f" % GameMan.effective_stat(cat_id, "charm"), 12, UiKit.INK))
+	stats.add_child(UiKit.label("cut %d T" % GameMan.cat_cut(cat_id), 12, UiKit.INK_DIM))
 
 	var trait_key := String(d.get("trait", ""))
 	if trait_key != "":
-		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 11, UiKit.BLUE))
+		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 11, UiKit.INK_BLUE))
 
 	vb.add_child(_gear_row(cat_id))
 	vb.add_child(UiKit.state_badge(cat_id))
@@ -117,9 +117,9 @@ func _gear_row(cat_id: String) -> HBoxContainer:
 	hb.add_theme_constant_override("separation", 4)
 	var worn := String(GameMan.cats[cat_id]["gear"])
 	if worn != "":
-		hb.add_child(UiKit.label("Wearing: " + String(WorldData.item_by_id(worn)["name"]), 11, UiKit.GREEN))
+		hb.add_child(UiKit.label("Wearing: " + String(WorldData.item_by_id(worn)["name"]), 11, UiKit.INK_GREEN))
 	else:
-		hb.add_child(UiKit.label("No gear", 11, UiKit.DIM))
+		hb.add_child(UiKit.label("No gear", 11, UiKit.INK_DIM))
 	for item in WorldData.items():
 		if String(item["kind"]) != "gear":
 			continue
@@ -137,9 +137,10 @@ func _gear_row(cat_id: String) -> HBoxContainer:
 	return hb
 
 
+## Meter fills sit on parchment, so these are the ink tones, not the chrome ones.
 func _loyalty_color(value: int) -> Color:
 	if value >= 60:
-		return UiKit.GREEN
+		return UiKit.INK_GREEN
 	if value >= 30:
-		return UiKit.ORANGE
+		return UiKit.INK_GOLD
 	return UiKit.OXBLOOD

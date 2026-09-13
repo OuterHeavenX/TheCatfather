@@ -12,6 +12,13 @@ License note: the free pack is for PERSONAL USE. If this game is ever
 released commercially, buy the paid pack from the same itch.io page —
 it covers commercial use.
 
+Fonts: Lora, Libre Baskerville and Arsenal SC, all under the SIL Open Font
+License. Each font's OFL.txt sits beside it in assets/fonts/ — keep those
+files with the fonts if the game is redistributed.
+
+UI textures in assets/ui/gen/ (parchment, wood, brass frames) are generated
+by tools/make_textures.py — procedural, no stock art, re-runnable.
+
 Music: "speakeasy_loop.wav" is synthesised from scratch by
 tools/make_music.py — additive synthesis and filtered noise, no samples
 and no third-party audio. Re-runnable and free of licence obligations.

@@ -64,7 +64,7 @@ func refresh() -> void:
 # ---------------------------------------------------------------- venue list
 
 func _render_venues() -> void:
-	_body.add_child(UiKit.label("THE BLOCKS", 15, UiKit.GOLD))
+	_body.add_child(UiKit.screen_header("The Blocks"))
 	for v in WorldData.venues():
 		_body.add_child(_venue_panel(v))
 
@@ -96,25 +96,25 @@ func _venue_panel(v: Dictionary) -> PanelContainer:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 6)
 	vb.add_child(head)
-	var name_l := UiKit.label(String(v["name"]), 14, UiKit.GOLD if unlocked else UiKit.DIM)
+	var name_l := UiKit.label(String(v["name"]), 14, UiKit.INK_GOLD if unlocked else UiKit.INK_DIM)
 	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(name_l)
 	if bool(state["controlled"]):
-		head.add_child(UiKit.label("HELD", 12, UiKit.GREEN))
+		head.add_child(UiKit.label("HELD", 12, UiKit.INK_GREEN))
 
 	if not unlocked:
-		vb.add_child(UiKit.label("Needs %d respect. %s" % [int(v["req_respect"]), String(v["yield_label"])], 12, UiKit.DIM))
+		vb.add_child(UiKit.label("Needs %d respect. %s" % [int(v["req_respect"]), String(v["yield_label"])], 12, UiKit.INK_DIM))
 		return p
 
-	vb.add_child(UiKit.label("%s  ·  shakedown risk %s" % [String(v["yield_label"]), String(v["risk_label"])], 11, UiKit.DIM))
-	vb.add_child(UiKit.label(String(v["perk"]), 11, UiKit.BLUE))
+	vb.add_child(UiKit.label("%s  ·  shakedown risk %s" % [String(v["yield_label"]), String(v["risk_label"])], 11, UiKit.INK_DIM))
+	vb.add_child(UiKit.label(String(v["perk"]), 11, UiKit.INK_BLUE))
 	vb.add_child(UiKit.meter("UNREST", float(state["unrest"]), WorldData.MAX_UNREST, UiKit.OXBLOOD, 90))
 
 	if not crew.is_empty():
 		var crew_row := HBoxContainer.new()
 		crew_row.add_theme_constant_override("separation", 4)
 		vb.add_child(crew_row)
-		crew_row.add_child(UiKit.label(WorldData.op_label(op), 12, UiKit.ORANGE))
+		crew_row.add_child(UiKit.label(WorldData.op_label(op), 12, UiKit.INK_GOLD))
 		for cid in crew:
 			var b := Button.new()
 			b.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
@@ -133,7 +133,7 @@ func _venue_panel(v: Dictionary) -> PanelContainer:
 			)
 			crew_row.add_child(b)
 		var odds := GameMan.preview_chance(vid, op, crew)
-		var col: Color = UiKit.GREEN if odds >= 0.7 else (UiKit.ORANGE if odds >= 0.45 else UiKit.RED)
+		var col: Color = UiKit.INK_GREEN if odds >= 0.7 else (UiKit.INK_GOLD if odds >= 0.45 else UiKit.INK_RED)
 		crew_row.add_child(UiKit.label("%d%%" % int(round(odds * 100.0)), 13, col))
 
 	var btns := HBoxContainer.new()
@@ -157,7 +157,7 @@ func _venue_panel(v: Dictionary) -> PanelContainer:
 
 func _render_picker() -> void:
 	var v := WorldData.venue_by_id(_picking_venue)
-	_body.add_child(UiKit.label("%s — %s" % [String(v["name"]), WorldData.op_label(_picking_op)], 15, UiKit.GOLD))
+	_body.add_child(UiKit.screen_header("%s — %s" % [String(v["name"]), WorldData.op_label(_picking_op)]))
 	var stat: String = String(v["collect_stat"]) if _picking_op == WorldData.OP_COLLECT else String(v["shake_stat"])
 	_body.add_child(UiKit.label("Job tests %s. Pick who goes." % GameData.STAT_LABELS.get(stat, stat), 12, UiKit.DIM))
 
@@ -196,13 +196,13 @@ func _pick_row(cat_id: String, stat: String) -> PanelContainer:
 	vb.add_theme_constant_override("separation", 1)
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_child(vb)
-	vb.add_child(UiKit.label(String(d["name"]), 14, UiKit.GOLD))
+	vb.add_child(UiKit.label(String(d["name"]), 14, UiKit.INK_GOLD))
 	vb.add_child(UiKit.label("LV %d  ·  %s %.1f"
 		% [int(GameMan.cats[cat_id]["level"]), GameData.STAT_LABELS.get(stat, stat),
-			GameMan.effective_stat(cat_id, stat)], 12, UiKit.CREAM))
+			GameMan.effective_stat(cat_id, stat)], 12, UiKit.INK))
 	var trait_key := String(d.get("trait", ""))
 	if trait_key != "":
-		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 11, UiKit.BLUE))
+		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 11, UiKit.INK_BLUE))
 
 	var b := UiKit.gold_button("SEND")
 	b.custom_minimum_size = Vector2(74, 40)

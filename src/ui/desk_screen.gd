@@ -51,7 +51,7 @@ func refresh() -> void:
 	for ch in _body.get_children():
 		ch.queue_free()
 
-	_body.add_child(UiKit.label("MORNING — THE SPEAKEASY DESK", 15, UiKit.GOLD))
+	_body.add_child(UiKit.screen_header("Speakeasy Desk"))
 
 	_body.add_child(_tariff_panel())
 	_body.add_child(_payroll_panel())
@@ -91,7 +91,7 @@ func _panel(title: String) -> Array:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 3)
 	p.add_child(vb)
-	vb.add_child(UiKit.label(title, 14, UiKit.GOLD))
+	vb.add_child(UiKit.label(title, 14, UiKit.INK_GOLD))
 	return [p, vb]
 
 
@@ -111,8 +111,8 @@ func _tariff_panel() -> PanelContainer:
 		names.add_theme_constant_override("separation", 0)
 		names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(names)
-		names.add_child(UiKit.label(String(g["name"]), 13, UiKit.CREAM))
-		names.add_child(UiKit.label(String(g["blurb"]), 11, UiKit.DIM))
+		names.add_child(UiKit.label(String(g["name"]), 13, UiKit.INK))
+		names.add_child(UiKit.label(String(g["blurb"]), 11, UiKit.INK_DIM))
 
 		var b := UiKit.button(WorldData.TARIFF_LABELS[level])
 		b.custom_minimum_size = Vector2(78, 28)
@@ -124,7 +124,7 @@ func _tariff_panel() -> PanelContainer:
 		row.add_child(b)
 
 	var gain := GameMan.daily_tension_gain()
-	var warn: Color = UiKit.GREEN if gain < 5.0 else (UiKit.ORANGE if gain < 10.0 else UiKit.RED)
+	var warn: Color = UiKit.INK_GREEN if gain < 5.0 else (UiKit.INK_GOLD if gain < 10.0 else UiKit.INK_RED)
 	vb.add_child(UiKit.label("Take +%d%% on every job  ·  war tension +%.0f a night"
 		% [int((GameMan.tariff_multiplier() - 1.0) * 100.0), gain], 12, warn))
 	return p
@@ -143,9 +143,9 @@ func _payroll_panel() -> PanelContainer:
 	info.add_theme_constant_override("separation", 0)
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(info)
-	info.add_child(UiKit.label("Tonight's payroll: %d T" % GameMan.nightly_payout(), 13, UiKit.CREAM))
+	info.add_child(UiKit.label("Tonight's payroll: %d T" % GameMan.nightly_payout(), 13, UiKit.INK))
 	info.add_child(UiKit.label("Police bribes: %d T  (heat %d)"
-		% [GameMan.nightly_bribes(), int(GameMan.heat)], 11, UiKit.DIM))
+		% [GameMan.nightly_bribes(), int(GameMan.heat)], 11, UiKit.INK_DIM))
 
 	var b := UiKit.button(WorldData.PAYOUT_LABELS[GameMan.payout_level])
 	b.custom_minimum_size = Vector2(100, 28)
@@ -157,7 +157,7 @@ func _payroll_panel() -> PanelContainer:
 	row.add_child(b)
 
 	var loyal: int = WorldData.PAYOUT_LOYALTY[GameMan.payout_level]
-	var col: Color = UiKit.GREEN if loyal > 0 else UiKit.RED
+	var col: Color = UiKit.INK_GREEN if loyal > 0 else UiKit.INK_RED
 	vb.add_child(UiKit.label("Loyalty %+d a night. At zero loyalty, a cat walks." % loyal, 12, col))
 	return p
 
@@ -180,8 +180,8 @@ func _stash_panel() -> PanelContainer:
 		info.add_theme_constant_override("separation", 0)
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
-		info.add_child(UiKit.label("%s x%d" % [String(item["name"]), n], 13, UiKit.CREAM))
-		info.add_child(UiKit.label(String(item["desc"]), 11, UiKit.DIM))
+		info.add_child(UiKit.label("%s x%d" % [String(item["name"]), n], 13, UiKit.INK))
+		info.add_child(UiKit.label(String(item["desc"]), 11, UiKit.INK_DIM))
 		if String(item["kind"]) == "use" and String(item["stat"]) != "heal":
 			var ub := UiKit.button("USE")
 			ub.custom_minimum_size = Vector2(62, 26)
@@ -192,7 +192,7 @@ func _stash_panel() -> PanelContainer:
 			)
 			row.add_child(ub)
 		else:
-			var l := UiKit.label("in CREW", 11, UiKit.DIM)
+			var l := UiKit.label("in CREW", 11, UiKit.INK_DIM)
 			l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			row.add_child(l)
 	if not any:

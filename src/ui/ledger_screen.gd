@@ -54,7 +54,7 @@ func refresh() -> void:
 		UiKit.allow_scroll_drag(self)
 		return
 
-	_body.add_child(UiKit.label("NIGHT — THE LEDGER, DAY %d" % int(r["day"]), 15, UiKit.GOLD))
+	_body.add_child(UiKit.screen_header("End of Day Ledger — Day %d" % int(r["day"])))
 
 	var ops: Array = r["ops"]
 	if ops.is_empty():
@@ -110,21 +110,21 @@ func _op_panel(o: Dictionary) -> PanelContainer:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 6)
 	vb.add_child(head)
-	var l := UiKit.label("%s — %s" % [String(v["name"]), WorldData.op_label(String(o["op"]))], 13, UiKit.GOLD)
+	var l := UiKit.label("%s — %s" % [String(v["name"]), WorldData.op_label(String(o["op"]))], 13, UiKit.INK_GOLD)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(l)
-	head.add_child(UiKit.label("CLEAN" if success else "BOTCHED", 13, UiKit.GREEN if success else UiKit.RED))
+	head.add_child(UiKit.label("CLEAN" if success else "BOTCHED", 13, UiKit.INK_GREEN if success else UiKit.INK_RED))
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	vb.add_child(row)
 	for cid in o["crew"]:
 		row.add_child(UiKit.portrait(String(cid), 26))
-	var odds := UiKit.label("%d%% odds" % int(round(float(o["chance"]) * 100.0)), 11, UiKit.DIM)
+	var odds := UiKit.label("%d%% odds" % int(round(float(o["chance"]) * 100.0)), 11, UiKit.INK_DIM)
 	odds.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	odds.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(odds)
-	row.add_child(UiKit.label("+%d T" % int(o["take"]), 14, UiKit.GOLD))
+	row.add_child(UiKit.label("+%d T" % int(o["take"]), 14, UiKit.INK_GOLD))
 	return p
 
 
@@ -135,21 +135,21 @@ func _money_panel(r: Dictionary) -> PanelContainer:
 	vb.add_theme_constant_override("separation", 1)
 	p.add_child(vb)
 
-	vb.add_child(_line("Job takings", int(r["takings"]), UiKit.CREAM))
-	vb.add_child(_line("Protection money", int(r["protection"]), UiKit.CREAM))
-	vb.add_child(_line("Crew payroll", -int(r["payout"]), UiKit.CREAM))
-	vb.add_child(_line("Police bribes", -int(r["bribes"]), UiKit.CREAM))
+	vb.add_child(_line("Job takings", int(r["takings"]), UiKit.INK))
+	vb.add_child(_line("Protection money", int(r["protection"]), UiKit.INK))
+	vb.add_child(_line("Crew payroll", -int(r["payout"]), UiKit.INK))
+	vb.add_child(_line("Police bribes", -int(r["bribes"]), UiKit.INK))
 	vb.add_child(UiKit.hsep())
 	var net := int(r["net"])
-	vb.add_child(_line("NET", net, UiKit.GREEN if net >= 0 else UiKit.RED))
+	vb.add_child(_line("NET", net, UiKit.INK_GREEN if net >= 0 else UiKit.INK_RED))
 	if int(r["respect_gain"]) > 0:
-		vb.add_child(UiKit.label("Respect +%d — %s" % [int(r["respect_gain"]), GameData.rank_name(GameMan.respect)], 12, UiKit.BLUE))
+		vb.add_child(UiKit.label("Respect +%d — %s" % [int(r["respect_gain"]), GameData.rank_name(GameMan.respect)], 12, UiKit.INK_BLUE))
 	return p
 
 
 func _line(text: String, amount: int, color: Color) -> HBoxContainer:
 	var hb := HBoxContainer.new()
-	var l := UiKit.label(text, 13, UiKit.DIM)
+	var l := UiKit.label(text, 13, UiKit.INK_DIM)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_child(l)
 	hb.add_child(UiKit.label("%+d T" % amount, 13, color))
