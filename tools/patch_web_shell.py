@@ -1,129 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
-		<title>The Catfather</title>
-		<style>
-html, body, #canvas {
-	margin: 0;
-	padding: 0;
-	border: 0;
-}
+#!/usr/bin/env python3
+"""Re-apply the Pawfellas boot fixes to a freshly exported index.html.
 
-body {
-	color: white;
-	background-color: black;
-	overflow: hidden;
-	touch-action: none;
-}
+Godot regenerates index.html on every web export, which drops these. Run this
+straight after:
 
-#canvas {
-	display: block;
-}
+    godot --headless --path . --export-release "Web" index.html
 
-#canvas:focus {
-	outline: none;
-}
+Safe to run twice: it detects an already-patched shell and does nothing.
 
-#status, #status-splash, #status-progress, #status-stage {
-	position: absolute;
-	left: 0;
-	right: 0;
-}
+What it restores, and why:
 
-#status, #status-splash {
-	top: 0;
-	bottom: 0;
-}
+  * Storage probe. Godot mounts user:// on IndexedDB via FS.syncfs(true, cb)
+    with no timeout, and its init() promise has no reject path. Safari can
+    leave indexedDB.open() pending forever, so the promise never settles and
+    never rejects -- the splash sits at 100% with no error. We probe
+    IndexedDB first and fall back to persistentPaths: [] if it does not
+    answer, trading save persistence for actually booting.
+  * Stall watchdog. 120s while downloading, 45s while starting, then a
+    message naming the stage instead of an endless splash.
+  * Stage text under the progress bar, so slow is distinguishable from stuck.
+"""
 
-#status {
-	background-color: #120b17;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	visibility: hidden;
-}
+import sys
+from pathlib import Path
 
-#status-splash {
-	max-height: 100%;
-	max-width: 100%;
-	margin: auto;
-}
-
-#status-splash.show-image--false {
-	display: none;
-}
-
-#status-splash.fullsize--true {
-	height: 100%;
-	width: 100%;
-	object-fit: contain;
-}
-
-#status-splash.use-filter--false {
-	image-rendering: pixelated;
-}
-
-#status-progress, #status-notice, #status-stage {
-	display: none;
-}
-
-#status-stage {
-	bottom: 5%;
-	color: #b9a7c4;
-	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
-	font-size: 0.85rem;
-	padding: 0 1rem;
-	text-align: center;
-}
-
-#status-progress {
-	bottom: 10%;
-	width: 50%;
-	margin: 0 auto;
-}
-
-#status-notice {
-	background-color: #5b3943;
-	border-radius: 0.5rem;
-	border: 1px solid #9b3943;
-	color: #e0e0e0;
-	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
-	line-height: 1.3;
-	margin: 0 2rem;
-	overflow: hidden;
-	padding: 1rem;
-	text-align: center;
-	z-index: 1;
-}
-		</style>
-		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
-<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
-
-	</head>
-	<body>
-		<canvas id="canvas">
-			Your browser does not support the canvas tag.
-		</canvas>
-
-		<noscript>
-			Your browser does not support JavaScript.
-		</noscript>
-
-		<div id="status">
-			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
-			<progress id="status-progress"></progress>
-			<div id="status-stage"></div>
-			<div id="status-notice"></div>
-		</div>
-
-		<script src="index.js"></script>
-		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2254536,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
-const GODOT_THREADS_ENABLED = false;
-// NOTE: hand-patched after export. See "Web export" in README.md before
+LOADER = r"""// NOTE: hand-patched after export. See "Web export" in README.md before
 // regenerating this file — a plain re-export drops the boot fallbacks below.
 let engine = null;
 
@@ -351,8 +252,70 @@ let engine = null;
 			startEngine();
 		});
 	}
-}());
-		</script>
-	</body>
-</html>
+}());"""
 
+OLD_POS = """#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}"""
+NEW_POS = """#status, #status-splash, #status-progress, #status-stage {
+	position: absolute;
+	left: 0;
+	right: 0;
+}"""
+
+OLD_CSS = """#status-progress, #status-notice {
+	display: none;
+}
+"""
+NEW_CSS = """#status-progress, #status-notice, #status-stage {
+	display: none;
+}
+
+#status-stage {
+	bottom: 5%;
+	color: #b9a7c4;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	font-size: 0.85rem;
+	padding: 0 1rem;
+	text-align: center;
+}
+"""
+
+OLD_BODY = """			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>"""
+NEW_BODY = """			<progress id="status-progress"></progress>
+			<div id="status-stage"></div>
+			<div id="status-notice"></div>"""
+
+
+def main() -> int:
+    path = Path(sys.argv[1] if len(sys.argv) > 1 else "index.html")
+    html = path.read_text()
+
+    if "probeStorage" in html:
+        print(f"{path}: already patched, nothing to do")
+        return 0
+
+    for old in (OLD_POS, OLD_CSS, OLD_BODY):
+        if old not in html:
+            print(f"{path}: expected block not found -- did the Godot shell change?",
+                  file=sys.stderr)
+            return 1
+
+    html = html.replace(OLD_POS, NEW_POS, 1)
+    html = html.replace(OLD_CSS, NEW_CSS, 1)
+    html = html.replace(OLD_BODY, NEW_BODY, 1)
+
+    start = html.index("const engine = new Engine(GODOT_CONFIG);")
+    end = html.index("}());", start) + len("}());")
+    html = html[:start] + LOADER + html[end:]
+
+    path.write_text(html)
+    print(f"{path}: boot fixes applied")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

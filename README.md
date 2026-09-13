@@ -71,18 +71,26 @@ clean, the browser console should log
 After deploying, hard-refresh — Safari in particular will keep serving the
 cached page for a while.
 
-### index.html is hand-patched
+### index.html is patched after every export
 
-`index.html` carries boot fixes that a plain re-export will overwrite, so
-re-apply them (or diff against the previous `index.html`) after exporting:
+Godot regenerates `index.html` on every web export, which drops the boot
+fixes below. Re-apply them with the checked-in tool — it is idempotent, so
+running it twice is harmless:
+
+```sh
+godot --headless --path . --export-release "Web" index.html
+python3 tools/patch_web_shell.py index.html
+```
+
+What the tool restores:
 
 - **Storage probe.** Godot mounts `user://` on IndexedDB via
-  `FS.syncfs(true, cb)` with no timeout, and Safari can leave
-  `indexedDB.open()` pending forever. When that happens the engine's init
-  promise never settles *and never rejects* — the splash sits there at 100%
-  with no error. The shell now probes IndexedDB first and, if it doesn't
-  answer within 5s, boots with `persistentPaths: []`: saves stop persisting
-  between sessions, but the game runs.
+  `FS.syncfs(true, cb)` with no timeout, and the promise its `init()` returns
+  has no reject path. Safari can leave `indexedDB.open()` pending forever —
+  when it does, that promise never settles *and never rejects*, so the splash
+  sits at 100% with no error. The shell probes IndexedDB first and, if it
+  doesn't answer within 5s, boots with `persistentPaths: []`: saves stop
+  persisting between sessions, but the game runs.
 - **Stall detection.** A watchdog (120s during download, 45s during engine
   start) replaces the endless splash with a message naming the stage it got
   stuck at, bytes downloaded, and storage state.
