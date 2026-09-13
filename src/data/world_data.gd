@@ -125,11 +125,6 @@ static func risk_pips(risk: float) -> int:
 	return 5
 
 
-static func risk_text(risk: float, bonus: float = 0.0) -> String:
-	var n := risk_pips(risk + bonus)
-	return "◆".repeat(n) + "◇".repeat(5 - n)
-
-
 static func venue_icon(venue_id: String) -> String:
 	return "res://assets/ui/gen/venue/%s.png" % venue_id
 

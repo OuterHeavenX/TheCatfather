@@ -175,7 +175,10 @@ func _job_row(v: Dictionary, op_id: String, current_op: String) -> HBoxContainer
 
 	var r := GameMan.yield_range(vid, op_id)
 	var bonus := 0.10 if op_id == WorldData.OP_SHAKEDOWN else 0.0
-	var stats := UiKit.label("%d–%d T   %s" % [r.x, r.y, WorldData.risk_text(float(v["risk"]), bonus)], 11, UiKit.INK_DIM)
+	var stats := HBoxContainer.new()
+	stats.add_theme_constant_override("separation", 7)
+	stats.add_child(UiKit.label("%d–%d T" % [r.x, r.y], 11, UiKit.INK_DIM))
+	stats.add_child(UiKit.risk_pips(WorldData.risk_pips(float(v["risk"]) + bonus)))
 	label_box.add_child(stats)
 
 	var b := UiKit.button("SEND")

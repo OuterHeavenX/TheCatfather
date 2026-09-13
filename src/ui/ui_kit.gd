@@ -126,6 +126,33 @@ static func label(text: String, size: int = 16, color: Color = CREAM) -> Label:
 	return l
 
 
+## Risk as drawn diamonds. None of the project fonts carry U+25C6/U+25C7, so
+## typing them renders a tofu box; these are textures.
+static func risk_pips(filled: int, total: int = 5, px: int = 11) -> HBoxContainer:
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 2)
+	for i in total:
+		var t := TextureRect.new()
+		t.texture = load(TEX_DIR + ("pip_full.png" if i < filled else "pip_empty.png"))
+		t.custom_minimum_size = Vector2(px, px)
+		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hb.add_child(t)
+	return hb
+
+
+static func glyph(file: String, px: int) -> TextureRect:
+	var t := TextureRect.new()
+	t.texture = load(TEX_DIR + file)
+	t.custom_minimum_size = Vector2(px, px)
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	t.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return t
+
+
 ## Small-caps display face, for screen titles and card headings.
 static func display_label(text: String, size: int = 18, color: Color = GOLD) -> Label:
 	var l := label(text, size, color)
@@ -153,9 +180,7 @@ static func screen_header(title: String) -> PanelContainer:
 	t.add_theme_constant_override("shadow_offset_x", 1)
 	t.add_theme_constant_override("shadow_offset_y", 2)
 	vb.add_child(t)
-	var rule := label("◆", 9, GOLD_DIM)
-	rule.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(rule)
+	vb.add_child(glyph("rule_diamond.png", 8))
 	return p
 
 
@@ -383,12 +408,12 @@ static func status_bar() -> PanelContainer:
 	bottom.add_child(war_chip)
 
 	var mute := Button.new()
-	mute.text = "♪" if not Jukebox.muted else "♪̸"
+	mute.icon = load(TEX_DIR + ("note_on.png" if not Jukebox.muted else "note_off.png"))
+	mute.expand_icon = true
 	mute.tooltip_text = "Music on/off"
 	mute.custom_minimum_size = Vector2(28, 26)
 	mute.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	mute.add_theme_font_size_override("font_size", 14)
-	mute.add_theme_color_override("font_color", GOLD if not Jukebox.muted else DIM)
+	mute.add_theme_constant_override("icon_max_width", 16)
 	mute.add_theme_stylebox_override("normal", _btn_box(SHADOW, GOLD_DIM))
 	mute.add_theme_stylebox_override("hover", _btn_box(Color(0.20, 0.16, 0.10), GOLD))
 	mute.add_theme_stylebox_override("pressed", _btn_box(Color(0.10, 0.08, 0.05), GOLD))
@@ -396,8 +421,7 @@ static func status_bar() -> PanelContainer:
 	mute.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	mute.pressed.connect(func() -> void:
 		Jukebox.toggle()
-		mute.text = "♪" if not Jukebox.muted else "♪̸"
-		mute.add_theme_color_override("font_color", GOLD if not Jukebox.muted else DIM)
+		mute.icon = load(TEX_DIR + ("note_on.png" if not Jukebox.muted else "note_off.png"))
 	)
 	bottom.add_child(mute)
 	return p

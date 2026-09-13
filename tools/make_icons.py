@@ -75,6 +75,43 @@ def hammer():
     return im
 
 
+def _diamond(size, fill, outline=None, width=3):
+    """Risk pip / ornament. Fonts in this project carry no U+25C6, so these
+    are drawn rather than typed — a missing glyph renders as a tofu box."""
+    im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    m = size // 2
+    pts = [(m, 2), (size - 3, m), (m, size - 3), (2, m)]
+    if fill is not None:
+        d.polygon(pts, fill=fill)
+    if outline is not None:
+        d.line(pts + [pts[0]], fill=outline, width=width)
+    return im
+
+
+def _note(size, colour):
+    """Music toggle glyph, drawn for the same reason."""
+    im = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    s = size * 4
+    d.ellipse([s * 0.10, s * 0.62, s * 0.48, s * 0.92], fill=colour)
+    d.rectangle([s * 0.42, s * 0.12, s * 0.52, s * 0.78], fill=colour)
+    d.polygon([(s * 0.52, s * 0.12), (s * 0.86, s * 0.26), (s * 0.86, s * 0.44),
+               (s * 0.52, s * 0.30)], fill=colour)
+    return im.resize((size, size), Image.LANCZOS)
+
+
+GLYPHS = {
+    # ink pips for the jobs cards, on parchment
+    "pip_full": lambda: _diamond(64, (42, 33, 24, 255)),
+    "pip_empty": lambda: _diamond(64, None, (42, 33, 24, 150), 4),
+    # brass ornament for the screen header, on wood
+    "rule_diamond": lambda: _diamond(64, (177, 146, 51, 255)),
+    "note_on": lambda: _note(64, (212, 175, 55, 255)),
+    "note_off": lambda: _note(64, (140, 132, 120, 255)),
+}
+
+
 EMBLEMS = {
     "blind_pig": bottle_and_glass,
     "fishmonger": fish,
@@ -87,6 +124,10 @@ EMBLEMS = {
 def main():
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "assets/ui/gen/venue")
     out.mkdir(parents=True, exist_ok=True)
+    for name, fn in GLYPHS.items():
+        fn().resize((32, 32), Image.LANCZOS).save(out.parent / ("%s.png" % name))
+        print("%-12s -> %s" % (name, out.parent / ("%s.png" % name)))
+
     for name, fn in EMBLEMS.items():
         im = fn()
         # a soft drop shadow lifts the ink off the paper slightly
