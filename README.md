@@ -19,6 +19,33 @@ Pantry → Bedroom → The Whole House.
 - `src/autoload/game_man.gd` — state, save (User://), heist engine
 - `src/data/game_data.gd` — 24-cat roster + 6 heists
 - `src/ui/` — code-built screens: title, office, crew, recruit, heists
-- Web export: `docs/` (GitHub Pages)
+- Web export: repo root (`index.html`, `index.js`, `index.wasm`, `index.pck`),
+  served by GitHub Pages
+
+## Web export: keep Thread Support OFF
+
+In the Godot Web export preset, **Thread Support must stay unchecked**
+(`variant/thread_support=false` in `export_presets.cfg`).
+
+A threaded build needs `SharedArrayBuffer`, which browsers only hand out to a
+cross-origin-isolated page — that requires the server to send
+`Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp`. GitHub Pages serves static files
+with fixed headers and cannot send those, so a threaded build dies on load with:
+
+```
+Error
+The following features required to run Godot projects on the Web are missing:
+Cross-Origin Isolation - Check that the web server configuration sends the correct headers.
+SharedArrayBuffer - Check that the web server configuration sends the correct headers.
+```
+
+If you re-export and see that, the checkbox got turned back on: uncheck it,
+re-export, and commit the regenerated `index.*` files. To confirm a build is
+clean, the browser console should log
+`Build configuration: ... single-threaded, no GDExtension support`.
+
+After deploying, hard-refresh — Safari in particular will keep serving the
+cached page for a while.
 
 Cat art: ToffeeCraft free pack — see NOTICE.
