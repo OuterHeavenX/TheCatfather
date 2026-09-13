@@ -3,17 +3,22 @@ extends RefCounted
 
 # Shared palette + widget builders for Pawfellas (640x360).
 
-const BG = Color(0.07, 0.045, 0.09)
-const PLUM = Color(0.15, 0.10, 0.19)
-const PANEL = Color(0.17, 0.115, 0.23)
-const GOLD = Color(0.79, 0.635, 0.15)
-const GOLD_DIM = Color(0.52, 0.42, 0.13)
-const CREAM = Color(0.91, 0.86, 0.75)
-const DIM = Color(0.63, 0.57, 0.67)
-const RED = Color(0.87, 0.32, 0.30)
-const GREEN = Color(0.45, 0.80, 0.45)
-const BLUE = Color(0.45, 0.65, 0.92)
-const ORANGE = Color(0.95, 0.62, 0.25)
+# "Noir, Wealth & Blood" — Midnight Black, Oxblood Red, Warm Brass Gold,
+# Smoky Charcoal and Aged Parchment. Black and charcoal carry the neutral
+# baseline, brass marks anything you can press, and oxblood is reserved for
+# things going wrong.
+const BG = Color("121212")           # Midnight Black — the shadow world
+const SHADOW = Color("1C1C1E")         # between black and charcoal, for button faces
+const PANEL = Color("2C2C2E")        # Smoky Charcoal — cards and secondary panels
+const GOLD = Color("D4AF37")         # Warm Brass Gold — money, rank, interactables
+const GOLD_DIM = Color("B19233")     # brass in shadow, for borders and captions
+const CREAM = Color("E6D5B8")        # Aged Parchment — body text
+const DIM = Color("A39A8D")          # parchment, dropped back for secondary text
+const OXBLOOD = Color("6B1111")      # Oxblood Red — fills and borders only
+const RED = Color("CD7D76")          # oxblood lifted to stay legible as text
+const GREEN = Color("8A9A5B")        # bottle green, desaturated to sit with brass
+const BLUE = Color("8298AA")         # slate, for informational notes
+const ORANGE = Color("C08A3E")       # tarnished brass, for in-progress states
 
 
 static func panel_style() -> StyleBoxFlat:
@@ -26,6 +31,14 @@ static func panel_style() -> StyleBoxFlat:
 	s.content_margin_right = 10
 	s.content_margin_top = 8
 	s.content_margin_bottom = 8
+	return s
+
+
+## Oxblood-bordered card, reserved for critical events.
+static func danger_panel_style() -> StyleBoxFlat:
+	var s := panel_style()
+	s.border_color = OXBLOOD
+	s.bg_color = Color(0.16, 0.09, 0.09)
 	return s
 
 
@@ -50,7 +63,7 @@ static func button(text: String) -> Button:
 	b.add_theme_color_override("font_hover_color", GOLD)
 	b.add_theme_color_override("font_pressed_color", GOLD)
 	b.add_theme_color_override("font_disabled_color", DIM)
-	b.add_theme_stylebox_override("normal", _btn_box(PLUM, GOLD_DIM))
+	b.add_theme_stylebox_override("normal", _btn_box(SHADOW, GOLD_DIM))
 	b.add_theme_stylebox_override("hover", _btn_box(Color(0.20, 0.13, 0.25), GOLD))
 	b.add_theme_stylebox_override("pressed", _btn_box(Color(0.10, 0.07, 0.13), GOLD))
 	b.add_theme_stylebox_override("disabled", _btn_box(Color(0.10, 0.09, 0.12), Color(0.25, 0.22, 0.28)))
@@ -240,7 +253,7 @@ static func meter(text: String, value: float, maximum: float, fill_color: Color,
 static func status_bar() -> PanelContainer:
 	var p := PanelContainer.new()
 	var box := StyleBoxFlat.new()
-	box.bg_color = PLUM
+	box.bg_color = SHADOW
 	box.border_color = GOLD_DIM
 	box.set_border_width_all(2)
 	box.set_corner_radius_all(5)
@@ -264,7 +277,7 @@ static func status_bar() -> PanelContainer:
 	mid.add_theme_constant_override("separation", 1)
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_child(mid)
-	mid.add_child(meter("HEAT", GameMan.heat, 100.0, RED))
+	mid.add_child(meter("HEAT", GameMan.heat, 100.0, OXBLOOD))
 	mid.add_child(meter("WAR", GameMan.tension, 100.0, ORANGE))
 
 	var mute := Button.new()
@@ -274,7 +287,7 @@ static func status_bar() -> PanelContainer:
 	mute.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	mute.add_theme_font_size_override("font_size", 15)
 	mute.add_theme_color_override("font_color", GOLD if not Jukebox.muted else DIM)
-	mute.add_theme_stylebox_override("normal", _btn_box(PLUM, GOLD_DIM))
+	mute.add_theme_stylebox_override("normal", _btn_box(SHADOW, GOLD_DIM))
 	mute.add_theme_stylebox_override("hover", _btn_box(Color(0.20, 0.13, 0.25), GOLD))
 	mute.add_theme_stylebox_override("pressed", _btn_box(Color(0.10, 0.07, 0.13), GOLD))
 	mute.add_theme_stylebox_override("focus", StyleBoxEmpty.new())

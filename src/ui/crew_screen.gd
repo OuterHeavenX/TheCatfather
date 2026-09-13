@@ -142,4 +142,4 @@ func _loyalty_color(value: int) -> Color:
 		return UiKit.GREEN
 	if value >= 30:
 		return UiKit.ORANGE
-	return UiKit.RED
+	return UiKit.OXBLOOD

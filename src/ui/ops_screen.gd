@@ -108,7 +108,7 @@ func _venue_panel(v: Dictionary) -> PanelContainer:
 
 	vb.add_child(UiKit.label("%s  ·  shakedown risk %s" % [String(v["yield_label"]), String(v["risk_label"])], 11, UiKit.DIM))
 	vb.add_child(UiKit.label(String(v["perk"]), 11, UiKit.BLUE))
-	vb.add_child(UiKit.meter("UNREST", float(state["unrest"]), WorldData.MAX_UNREST, UiKit.RED, 90))
+	vb.add_child(UiKit.meter("UNREST", float(state["unrest"]), WorldData.MAX_UNREST, UiKit.OXBLOOD, 90))
 
 	if not crew.is_empty():
 		var crew_row := HBoxContainer.new()

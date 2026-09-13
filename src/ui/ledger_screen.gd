@@ -87,7 +87,7 @@ func refresh() -> void:
 
 	if String(r["rival"]) != "":
 		var panel := PanelContainer.new()
-		panel.add_theme_stylebox_override("panel", UiKit.panel_style())
+		panel.add_theme_stylebox_override("panel", UiKit.danger_panel_style())
 		var pv := VBoxContainer.new()
 		pv.add_theme_constant_override("separation", 2)
 		panel.add_child(pv)
