@@ -77,9 +77,13 @@ func _on_new_game(btn: Button) -> void:
 		btn.text = "OVERWRITE SAVE? TAP AGAIN"
 		return
 	GameMan.new_game()
-	main.show_screen("office")
+	main.show_screen("story")
 
 
 func _on_continue() -> void:
-	if GameMan.load_game():
-		main.show_screen("office")
+	if not GameMan.load_game():
+		return
+	if not GameMan.pending_beat().is_empty():
+		main.show_screen("story")
+	else:
+		main.show_screen("desk")

@@ -7,20 +7,43 @@ https://outerheavenx.github.io/TheCatfather/
 
 ## Play
 
-You are the Don. Start with 100 treats, Al Catpone, Bugsy Meow-sie, and
-Penny "The Pickpocket". Recruit from 24 named mobster cats, send crews on
-6 heists (Pantry Raid … The Big Kibble Score), earn treats and respect,
-and take over the house turf by turf: Living Room Rug → Couch → Kitchen →
-Pantry → Bedroom → The Whole House.
+New York, 1928. You are Jimmy "Two-Times." Don Corle-meow-ne's catnip shipment
+vanished off the Kelso dock, the truce with Carmela's Alley Syndicate is held
+together by manners alone, and somebody wants a war.
+
+Each day runs in three phases:
+
+1. **Morning at the desk** — set tariffs on catnip, salmon and furniture, and
+   decide what cut the crew takes tonight. Steep tariffs pay more and push the
+   city closer to war.
+2. **The blocks** — send cats to five venues as **collections** (charm and
+   sneak, steady money, calms the street) or **shakedowns** (muscle, bigger
+   take, loot, and unrest). Odds are shown before you commit.
+3. **The ledger** — takings, protection money, payroll and police bribes are
+   totalled. Unpaid crews lose loyalty and eventually walk. When war tension
+   runs hot, the Alley Syndicate hits back and blocks change hands.
+
+Nine story chapters unfold across the first sixteen days, with choices that
+decide where you land: with the Don, with Carmela, or on top of both.
 
 ## Dev
 
 - Godot 4.7.2, GL Compatibility renderer, 640x360 canvas_items stretch
-- `src/autoload/game_man.gd` — state, save (User://), heist engine
-- `src/data/game_data.gd` — 24-cat roster + 6 heists
-- `src/ui/` — code-built screens: title, office, crew, recruit, heists
+- `src/autoload/game_man.gd` — empire state, the day cycle, save/load
+- `src/data/game_data.gd` — 25-cat roster, traits, rank ladder
+- `src/data/world_data.gd` — venues, tariffs, loot
+- `src/data/story_data.gd` — story beats and branching choices
+- `src/ui/` — code-built screens: title, story, desk, ops, ledger, crew,
+  recruit
 - Web export: repo root (`index.html`, `index.js`, `index.wasm`, `index.pck`),
   served by GitHub Pages
+
+Headless checks, which need no display:
+
+```sh
+godot --headless --path . --import          # generate .import files
+godot --headless --path . --quit-after 90   # boot the main scene
+```
 
 ## Web export: keep Thread Support OFF
 

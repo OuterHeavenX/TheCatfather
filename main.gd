@@ -7,10 +7,12 @@ var current: Control = null
 
 func _ready() -> void:
 	_add_screen("title", TitleScreen.new())
-	_add_screen("office", OfficeScreen.new())
+	_add_screen("story", StoryScreen.new())
+	_add_screen("desk", DeskScreen.new())
+	_add_screen("ops", OpsScreen.new())
+	_add_screen("ledger", LedgerScreen.new())
 	_add_screen("crew", CrewScreen.new())
 	_add_screen("recruit", RecruitScreen.new())
-	_add_screen("heists", HeistsScreen.new())
 	show_screen("title")
 
 

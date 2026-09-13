@@ -1,7 +1,7 @@
 class_name UiKit
 extends RefCounted
 
-# Shared palette + widget builders for The Catfather (640x360, pixel art).
+# Shared palette + widget builders for Pawfellas (640x360).
 
 const BG = Color(0.07, 0.045, 0.09)
 const PLUM = Color(0.15, 0.10, 0.19)
@@ -178,16 +178,109 @@ static func hsep() -> HSeparator:
 
 
 static func state_badge(cat_id: String) -> Label:
-	var st := GameMan.cat_state(cat_id)
-	var l: Label
-	match st:
+	match GameMan.cat_state(cat_id):
 		"ready":
-			l = label("READY", 13, GREEN)
-		"on_heist":
-			var h := GameData.heist_by_id(String(GameMan.cats[cat_id]["heist_id"]))
-			l = label("ON HEIST: " + String(h.get("name", "")).to_upper(), 13, ORANGE)
+			return label("READY", 13, GREEN)
+		"assigned":
+			var vid := String(GameMan.cats[cat_id]["venue"])
+			var v := WorldData.venue_by_id(vid)
+			var op := String(GameMan.cats[cat_id]["op"])
+			return label("%s — %s" % [WorldData.op_label(op), String(v.get("name", "")).to_upper()], 13, ORANGE)
 		"wounded":
-			l = label("LICKING WOUNDS " + fmt_time(GameMan.wound_remaining(cat_id)), 13, BLUE)
-		_:
-			l = label(st.to_upper(), 13, DIM)
+			var days := int(GameMan.cats[cat_id]["wounded_days"])
+			return label("LICKING WOUNDS (%d day%s)" % [days, "" if days == 1 else "s"], 13, BLUE)
+	return label("", 13, DIM)
+
+
+## Full-body art for story scenes; falls back to the roster portrait for cats
+## that were never drawn.
+static func body_portrait(cat_id: String, height: int) -> TextureRect:
+	var tr := TextureRect.new()
+	var body := "res://assets/cats/mob/%s.png" % cat_id
+	var tex: Texture2D = load(body) if ResourceLoader.exists(body) else null
+	if tex == null:
+		var d := GameData.cat_by_id(cat_id)
+		if not d.is_empty():
+			tex = load("res://assets/cats/%s.png" % String(d["portrait"]))
+	tr.texture = tex
+	tr.custom_minimum_size = Vector2(float(height) * 0.85, height)
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	return tr
+
+
+## Labelled bar for treats / heat / tension / loyalty.
+static func meter(text: String, value: float, maximum: float, fill_color: Color, width: int = 70) -> HBoxContainer:
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 5)
+	var l := label(text, 12, DIM)
+	l.custom_minimum_size = Vector2(46, 0)
+	hb.add_child(l)
+	var bar := ProgressBar.new()
+	bar.min_value = 0
+	bar.max_value = maximum
+	bar.value = clampf(value, 0.0, maximum)
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(width, 10)
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.10, 0.08, 0.13)
+	bg.set_corner_radius_all(3)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = fill_color
+	fill.set_corner_radius_all(3)
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
+	hb.add_child(bar)
+	hb.add_child(label(str(int(value)), 12, CREAM))
+	return hb
+
+
+## The persistent status strip across the top of every management screen.
+static func status_bar() -> PanelContainer:
+	var p := PanelContainer.new()
+	var box := StyleBoxFlat.new()
+	box.bg_color = PLUM
+	box.border_color = GOLD_DIM
+	box.set_border_width_all(2)
+	box.set_corner_radius_all(5)
+	box.content_margin_left = 8
+	box.content_margin_right = 8
+	box.content_margin_top = 4
+	box.content_margin_bottom = 4
+	p.add_theme_stylebox_override("panel", box)
+
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 10)
+	p.add_child(hb)
+
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 1)
+	hb.add_child(left)
+	left.add_child(label("DAY %d" % GameMan.day, 17, GOLD))
+	left.add_child(label(GameData.rank_name(GameMan.respect), 11, DIM))
+
+	var mid := VBoxContainer.new()
+	mid.add_theme_constant_override("separation", 1)
+	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hb.add_child(mid)
+	mid.add_child(meter("HEAT", GameMan.heat, 100.0, RED))
+	mid.add_child(meter("WAR", GameMan.tension, 100.0, ORANGE))
+
+	var right := VBoxContainer.new()
+	right.add_theme_constant_override("separation", 1)
+	hb.add_child(right)
+	var t := label("%d T" % GameMan.treats, 17, GOLD)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	right.add_child(t)
+	var r := label("RESPECT %d" % GameMan.respect, 11, DIM)
+	r.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	right.add_child(r)
+	return p
+
+
+static func body_text(text: String, size: int = 14, color: Color = CREAM) -> Label:
+	var l := label(text, size, color)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return l

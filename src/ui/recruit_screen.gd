@@ -22,8 +22,8 @@ func _ready() -> void:
 
 	var top := HBoxContainer.new()
 	vb.add_child(top)
-	var back := UiKit.back_button()
-	back.pressed.connect(func() -> void: main.show_screen("office"))
+	var back := UiKit.back_button("< DESK")
+	back.pressed.connect(func() -> void: main.show_screen("desk"))
 	top.add_child(back)
 	var title := UiKit.label("RECRUIT", 22, UiKit.GOLD)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -95,6 +95,8 @@ func _row(cat_id: String) -> PanelContainer:
 	var trait_key := String(d.get("trait", ""))
 	if trait_key != "":
 		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 12, UiKit.BLUE))
+
+	vb.add_child(UiKit.label("Nightly cut: %d T" % (5 + 3 + (6 if String(d.get("role", "")) == "muscle" else (3 if String(d.get("role", "")) == "specialist" else 0))), 11, UiKit.DIM))
 
 	var hire := UiKit.gold_button("HIRE  %dT" % cost)
 	hire.custom_minimum_size = Vector2(110, 56)

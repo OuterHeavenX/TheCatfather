@@ -1,7 +1,7 @@
 class_name GameData
 extends RefCounted
 
-# Static roster + heist definitions for The Catfather.
+# Roster, traits and standing for Pawfellas.
 
 const TINT_WHITE = Color(1.0, 1.0, 1.0)
 const TINT_SILVER = Color(0.80, 0.80, 0.92)
@@ -10,12 +10,12 @@ const TINT_GINGER = Color(1.0, 0.72, 0.50)
 const TINT_CREAM = Color(1.0, 0.90, 0.75)
 
 const TRAIT_NAMES = {
-	"never_injured": "Never Squeals — cannot be injured",
-	"lucky": "Lucky Claws — better odds on heists",
+	"never_injured": "Never Squeals — never gets hurt on a job",
+	"lucky": "Lucky Claws — better odds on every job",
 	"unlucky": "Wrong Side of the Door — injury-prone",
-	"double_treats": "Two-Times — +25% treats on success",
-	"dog_bonus": "Dog-Hater — edge on dog jobs",
-	"velvet_touch": "Velvet Touch — +25% treats on charm jobs",
+	"double_treats": "Two-Times — +25% treats on a successful job",
+	"dog_bonus": "Dog-Hater — edge on shakedowns",
+	"velvet_touch": "Velvet Touch — +25% treats on collections",
 }
 
 const ROLE_LABELS = {
@@ -104,41 +104,24 @@ static func trait_name(trait_key: String) -> String:
 	return String(TRAIT_NAMES.get(trait_key, ""))
 
 
-static func heists() -> Array:
-	return [
-		{"id": "pantry_raid", "name": "Pantry Raid", "desc": "Hit the pantry shelves before the human wakes up.", "stat": "sneak", "difficulty": 8, "min_cats": 1, "max_cats": 2, "duration": 45.0, "reward_t": 40, "reward_r": 4, "injury": 0.15, "req_respect": 0, "show_dog": false},
-		{"id": "zoomies_3am", "name": "3AM Zoomies Distraction", "desc": "Bugsy's specialty: pure chaos at 3AM while the crew slips past.", "stat": "sneak", "difficulty": 10, "min_cats": 1, "max_cats": 2, "duration": 60.0, "reward_t": 55, "reward_r": 5, "injury": 0.15, "req_respect": 0, "show_dog": false},
-		{"id": "hair_tie_hijack", "name": "Hair Tie Hijack", "desc": "Penny's classic: hair ties and socks, gone without a trace.", "stat": "sneak", "difficulty": 12, "min_cats": 1, "max_cats": 2, "duration": 75.0, "reward_t": 70, "reward_r": 7, "injury": 0.20, "req_respect": 0, "show_dog": false},
-		{"id": "couch_turf", "name": "Couch Turf Takeover", "desc": "Take the high back of the couch by force.", "stat": "muscle", "difficulty": 14, "min_cats": 2, "max_cats": 2, "duration": 90.0, "reward_t": 95, "reward_r": 10, "injury": 0.25, "req_respect": 0, "show_dog": false},
-		{"id": "shakedown_dog", "name": "Shake Down the Dog", "desc": "The dog has been hoarding treats. Time to collect.", "stat": "muscle_charm", "difficulty": 18, "min_cats": 2, "max_cats": 3, "duration": 120.0, "reward_t": 150, "reward_r": 15, "injury": 0.35, "req_respect": 0, "show_dog": true},
-		{"id": "kibble_score", "name": "The Big Kibble Score", "desc": "The motherlode: the bulk kibble vault. Bring your best crew.", "stat": "all", "difficulty": 24, "min_cats": 3, "max_cats": 3, "duration": 180.0, "reward_t": 260, "reward_r": 25, "injury": 0.40, "req_respect": 40, "show_dog": false},
-	]
+## Standing in the underworld, by respect.
+static func rank_name(respect: int) -> String:
+	if respect >= 90:
+		return "Don of the House"
+	if respect >= 70:
+		return "Underboss"
+	if respect >= 50:
+		return "Capo"
+	if respect >= 30:
+		return "Made Cat"
+	if respect >= 12:
+		return "Soldier"
+	return "Street Runner"
 
 
-static func heist_by_id(heist_id: String) -> Dictionary:
-	for h in heists():
-		if String(h["id"]) == heist_id:
-			return h
-	return {}
-
-
-static func turf_name(respect: int) -> String:
-	if respect >= 100:
-		return "The Whole House"
-	if respect >= 80:
-		return "The Bedroom"
-	if respect >= 60:
-		return "The Pantry"
-	if respect >= 40:
-		return "The Kitchen"
-	if respect >= 20:
-		return "The Couch"
-	return "The Living Room Rug"
-
-
-static func next_turf(respect: int) -> Array:
-	var gates := [20, 40, 60, 80, 100]
-	for g in gates:
+## Next rank up and the respect it takes, for progress display.
+static func next_rank(respect: int) -> Array:
+	for g in [12, 30, 50, 70, 90]:
 		if respect < g:
-			return [turf_name(g), g]
+			return [rank_name(g), g]
 	return ["", 100]
