@@ -6,9 +6,14 @@ grey #404040). Alpha was solved from the pair rather than colour-keyed:
 pixels identical in both plates are opaque, pixels that differ are
 background, and the size of the difference gives partial alpha on edges.
 
-Filenames match `id` in `src/data/game_data.gd`. Not yet wired into
-`UiKit.portrait()` — that renders 64x64 and these are full-body, so they
-need either a headshot crop or a larger portrait slot first.
+Filenames match `id` in `src/data/game_data.gd`.
+
+`head/` holds 128x128 headshot crops of the same drawings — square, centred
+on the face, transparent-padded rather than clamped so no head is squashed.
+These are what the roster points at (`"portrait": "mob/head/<id>"`), since
+`UiKit.portrait()` draws at 64x64 where a full-body cat is unreadable. The
+full-body versions in this folder are unused for now; they suit a larger
+detail view.
 
 Notes:
 - `lefty_ruggiero.png` / `lefty_ruggiero_alt.png` — the sheet draws Lefty
