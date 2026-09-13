@@ -73,7 +73,8 @@ func _row(cat_id: String) -> PanelContainer:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 6)
 	vb.add_child(head)
-	var n := UiKit.label(String(d["name"]), 16, UiKit.INK_GOLD)
+	var n := UiKit.display_label(String(d["name"]), 15, UiKit.INK_GOLD)
+	n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(n)
 	head.add_child(UiKit.label("LV %d" % int(c["level"]), 14, UiKit.INK))
@@ -96,7 +97,7 @@ func _row(cat_id: String) -> PanelContainer:
 
 	var trait_key := String(d.get("trait", ""))
 	if trait_key != "":
-		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 11, UiKit.INK_BLUE))
+		vb.add_child(UiKit.body_text(GameData.trait_name(trait_key), 11, UiKit.INK_BLUE))
 
 	vb.add_child(_gear_row(cat_id))
 	vb.add_child(UiKit.state_badge(cat_id))
@@ -117,7 +118,7 @@ func _gear_row(cat_id: String) -> HBoxContainer:
 	hb.add_theme_constant_override("separation", 4)
 	var worn := String(GameMan.cats[cat_id]["gear"])
 	if worn != "":
-		hb.add_child(UiKit.label("Wearing: " + String(WorldData.item_by_id(worn)["name"]), 11, UiKit.INK_GREEN))
+		hb.add_child(UiKit.body_text("Wearing: " + String(WorldData.item_by_id(worn)["name"]), 11, UiKit.INK_GREEN))
 	else:
 		hb.add_child(UiKit.label("No gear", 11, UiKit.INK_DIM))
 	for item in WorldData.items():

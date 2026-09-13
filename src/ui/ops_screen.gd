@@ -122,7 +122,7 @@ func _venue_panel(v: Dictionary) -> PanelContainer:
 		vb.add_child(UiKit.label("Locked — needs %d respect." % int(v["req_respect"]), 12, UiKit.INK_DIM))
 		return p
 
-	vb.add_child(UiKit.label(String(v["perk"]), 11, UiKit.INK_BLUE))
+	vb.add_child(UiKit.body_text(String(v["perk"]), 11, UiKit.INK_BLUE))
 	vb.add_child(UiKit.meter("UNREST", float(state["unrest"]), WorldData.MAX_UNREST, UiKit.OXBLOOD, 84))
 
 	# one row per job type: yield range, risk diamonds, and the send button
@@ -241,7 +241,7 @@ func _pick_row(cat_id: String, stat: String) -> PanelContainer:
 			GameMan.effective_stat(cat_id, stat)], 12, UiKit.INK))
 	var trait_key := String(d.get("trait", ""))
 	if trait_key != "":
-		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 11, UiKit.INK_BLUE))
+		vb.add_child(UiKit.body_text(GameData.trait_name(trait_key), 11, UiKit.INK_BLUE))
 
 	var b := UiKit.gold_button("SEND")
 	b.custom_minimum_size = Vector2(74, 40)

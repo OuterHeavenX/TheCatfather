@@ -217,15 +217,15 @@ static func animated(strip_path: String, frames: int, fps: float = 6.0) -> Anima
 static func stat_mini(label_text: String, value: int) -> HBoxContainer:
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 4)
-	var l := label(label_text, 13, DIM)
-	l.custom_minimum_size = Vector2(16, 0)
+	var l := label(label_text, 12, DIM)
+	l.custom_minimum_size = Vector2(12, 0)
 	hb.add_child(l)
 	var bar := ProgressBar.new()
 	bar.min_value = 0
 	bar.max_value = 10
 	bar.value = value
 	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(56, 12)
+	bar.custom_minimum_size = Vector2(40, 11)
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = Color(0.10, 0.08, 0.13)
@@ -325,7 +325,8 @@ static func _chip(title: String, body: Control) -> PanelContainer:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 0)
 	p.add_child(vb)
-	var t := caps_label(title, 10, GOLD_DIM)
+	var t := caps_label(title, 9, GOLD_DIM)
+	t.clip_text = true
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(t)
 	body.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -333,44 +334,59 @@ static func _chip(title: String, body: Control) -> PanelContainer:
 	return p
 
 
+## Two compact rows, because one row of chips needs more width than a phone
+## has and its minimum drags every panel on the screen off the right edge.
 static func status_bar() -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", wood_style(8, 4))
+	p.add_theme_stylebox_override("panel", wood_style(6, 3))
 
-	var hb := HBoxContainer.new()
-	hb.add_theme_constant_override("separation", 5)
-	p.add_child(hb)
+	var rows := VBoxContainer.new()
+	rows.add_theme_constant_override("separation", 3)
+	p.add_child(rows)
 
-	var day := display_label(str(GameMan.day), 16, CREAM)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 4)
+	rows.add_child(top)
+
+	var day := display_label(str(GameMan.day), 14, CREAM)
 	day.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hb.add_child(_chip("DAY", day))
+	top.add_child(_chip("DAY", day))
 
-	var cash := display_label("%d T" % GameMan.treats, 16, GOLD)
+	var cash := display_label("%d T" % GameMan.treats, 14, GOLD)
 	cash.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hb.add_child(_chip("CASH", cash))
-
-	var heat_box := VBoxContainer.new()
-	heat_box.add_theme_constant_override("separation", 0)
-	heat_box.add_child(meter("", GameMan.heat, 100.0, OXBLOOD, 54))
-	hb.add_child(_chip("HEAT", heat_box))
-
-	var war_box := VBoxContainer.new()
-	war_box.add_theme_constant_override("separation", 0)
-	war_box.add_child(meter("", GameMan.tension, 100.0, ORANGE, 54))
-	hb.add_child(_chip("WAR", war_box))
+	top.add_child(_chip("CASH", cash))
 
 	var rank := caps_label(GameData.rank_name(GameMan.respect), 11, CREAM)
 	rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rank.clip_text = true
 	var rank_chip := _chip("RESPECT %d" % GameMan.respect, rank)
 	rank_chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hb.add_child(rank_chip)
+	top.add_child(rank_chip)
+
+	var bottom := HBoxContainer.new()
+	bottom.add_theme_constant_override("separation", 4)
+	rows.add_child(bottom)
+
+	var heat := VBoxContainer.new()
+	heat.add_theme_constant_override("separation", 0)
+	heat.add_child(meter("", GameMan.heat, 100.0, OXBLOOD, 48))
+	var heat_chip := _chip("HEAT", heat)
+	heat_chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom.add_child(heat_chip)
+
+	var war := VBoxContainer.new()
+	war.add_theme_constant_override("separation", 0)
+	war.add_child(meter("", GameMan.tension, 100.0, ORANGE, 48))
+	var war_chip := _chip("WAR", war)
+	war_chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom.add_child(war_chip)
 
 	var mute := Button.new()
 	mute.text = "♪" if not Jukebox.muted else "♪̸"
 	mute.tooltip_text = "Music on/off"
-	mute.custom_minimum_size = Vector2(30, 30)
+	mute.custom_minimum_size = Vector2(28, 26)
 	mute.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	mute.add_theme_font_size_override("font_size", 15)
+	mute.add_theme_font_size_override("font_size", 14)
 	mute.add_theme_color_override("font_color", GOLD if not Jukebox.muted else DIM)
 	mute.add_theme_stylebox_override("normal", _btn_box(SHADOW, GOLD_DIM))
 	mute.add_theme_stylebox_override("hover", _btn_box(Color(0.20, 0.16, 0.10), GOLD))
@@ -382,7 +398,7 @@ static func status_bar() -> PanelContainer:
 		mute.text = "♪" if not Jukebox.muted else "♪̸"
 		mute.add_theme_color_override("font_color", GOLD if not Jukebox.muted else DIM)
 	)
-	hb.add_child(mute)
+	bottom.add_child(mute)
 	return p
 
 

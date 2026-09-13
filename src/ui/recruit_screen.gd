@@ -69,14 +69,17 @@ func _row(cat_id: String) -> PanelContainer:
 	hb.add_theme_constant_override("separation", 12)
 	p.add_child(hb)
 
-	hb.add_child(UiKit.portrait(cat_id, 64))
+	hb.add_child(UiKit.portrait(cat_id, 50))
 
 	var vb := VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_theme_constant_override("separation", 2)
 	hb.add_child(vb)
 
-	vb.add_child(UiKit.label(String(d["name"]), 19, UiKit.INK_GOLD))
+	var name_l := UiKit.display_label(String(d["name"]), 16, UiKit.INK_GOLD)
+	name_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vb.add_child(name_l)
 	var fl := UiKit.label(String(d["flavor"]), 13, UiKit.INK_DIM)
 	fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(fl)
@@ -89,18 +92,18 @@ func _row(cat_id: String) -> PanelContainer:
 	var stats := HBoxContainer.new()
 	stats.add_theme_constant_override("separation", 10)
 	vb.add_child(stats)
-	stats.add_child(UiKit.stat_mini("M", int(d["muscle"])))
-	stats.add_child(UiKit.stat_mini("S", int(d["sneak"])))
-	stats.add_child(UiKit.stat_mini("C", int(d["charm"])))
+	stats.add_child(UiKit.label("M %d" % int(d["muscle"]), 12, UiKit.INK))
+	stats.add_child(UiKit.label("S %d" % int(d["sneak"]), 12, UiKit.INK))
+	stats.add_child(UiKit.label("C %d" % int(d["charm"]), 12, UiKit.INK))
 
 	var trait_key := String(d.get("trait", ""))
 	if trait_key != "":
-		vb.add_child(UiKit.label(GameData.trait_name(trait_key), 12, UiKit.INK_BLUE))
+		vb.add_child(UiKit.body_text(GameData.trait_name(trait_key), 12, UiKit.INK_BLUE))
 
-	vb.add_child(UiKit.label("Nightly cut: %d T" % (5 + 3 + (6 if String(d.get("role", "")) == "muscle" else (3 if String(d.get("role", "")) == "specialist" else 0))), 11, UiKit.INK_DIM))
+	vb.add_child(UiKit.label("Nightly cut: %d T" % GameMan.cat_cut(cat_id), 11, UiKit.INK_DIM))
 
 	var hire := UiKit.gold_button("HIRE  %dT" % cost)
-	hire.custom_minimum_size = Vector2(110, 56)
+	hire.custom_minimum_size = Vector2(84, 46)
 	hire.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hire.disabled = GameMan.treats < cost
 	hire.pressed.connect(func() -> void:

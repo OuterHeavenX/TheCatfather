@@ -10,7 +10,7 @@ extends Control
 ## up by about 1.6x and leaves far less dead space.
 
 const BASE_LANDSCAPE := Vector2i(640, 360)
-const BASE_PORTRAIT := Vector2i(400, 700)
+const BASE_PORTRAIT := Vector2i(440, 780)
 
 var screens: Dictionary = {}
 var current: Control = null

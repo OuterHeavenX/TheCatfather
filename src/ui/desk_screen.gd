@@ -125,7 +125,7 @@ func _tariff_panel() -> PanelContainer:
 
 	var gain := GameMan.daily_tension_gain()
 	var warn: Color = UiKit.INK_GREEN if gain < 5.0 else (UiKit.INK_GOLD if gain < 10.0 else UiKit.INK_RED)
-	vb.add_child(UiKit.label("Take +%d%% on every job  ·  war tension +%.0f a night"
+	vb.add_child(UiKit.body_text("Take +%d%% on every job  ·  war tension +%.0f a night"
 		% [int((GameMan.tariff_multiplier() - 1.0) * 100.0), gain], 12, warn))
 	return p
 
@@ -158,7 +158,7 @@ func _payroll_panel() -> PanelContainer:
 
 	var loyal: int = WorldData.PAYOUT_LOYALTY[GameMan.payout_level]
 	var col: Color = UiKit.INK_GREEN if loyal > 0 else UiKit.INK_RED
-	vb.add_child(UiKit.label("Loyalty %+d a night. At zero loyalty, a cat walks." % loyal, 12, col))
+	vb.add_child(UiKit.body_text("Loyalty %+d a night. At zero loyalty, a cat walks." % loyal, 12, col))
 	return p
 
 
