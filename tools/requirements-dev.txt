@@ -1,0 +1,2 @@
+# Tooling-only dependencies. The game and Web export do not ship these.
+fonttools>=4.0

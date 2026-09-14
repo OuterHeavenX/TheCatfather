@@ -55,11 +55,23 @@ decide where you land: with the Don, with Carmela, or on top of both.
 Headless checks, which need no display:
 
 ```sh
+python -m pip install -r tools/requirements-dev.txt  # once, for the glyph check
 godot --headless --path . --import          # generate .import files
 godot --headless --path . --quit-after 90   # boot the main scene
 godot --headless --path . tests/smoke.tscn  # drive the systems; exits 1 on a failure
 python3 tools/check_glyphs.py               # no typed character missing from a font
 ```
+
+For the full isolated audit suite on Windows (including Web-loader behavior
+and a disposable user-data directory), run:
+
+```powershell
+.\tools\run_audit.ps1 -Godot godot -Python python -ExportWeb
+```
+
+The audit probe reports known behavior; it is intentionally not a green
+regression suite. The production audit, architecture and roadmap are in
+[`docs/`](docs/).
 
 `tests/smoke.tscn` also measures what every screen demands in width and fails
 if anything needs more than the 440 logical pixels a phone held upright gets.

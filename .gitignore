@@ -3,3 +3,6 @@
 
 # Godot web export temp files
 index.pck-*
+
+# Local audit exports, isolated test saves, logs and Python environment
+.audit/

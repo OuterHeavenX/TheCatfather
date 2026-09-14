@@ -292,7 +292,7 @@ NEW_BODY = """			<progress id="status-progress"></progress>
 
 def main() -> int:
     path = Path(sys.argv[1] if len(sys.argv) > 1 else "index.html")
-    html = path.read_text()
+    html = path.read_text(encoding="utf-8")
 
     if "probeStorage" in html:
         print(f"{path}: already patched, nothing to do")
@@ -312,7 +312,7 @@ def main() -> int:
     end = html.index("}());", start) + len("}());")
     html = html[:start] + LOADER + html[end:]
 
-    path.write_text(html)
+    path.write_text(html, encoding="utf-8")
     print(f"{path}: boot fixes applied")
     return 0
 
