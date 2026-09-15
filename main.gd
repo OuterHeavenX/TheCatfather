@@ -19,11 +19,32 @@ func _ready() -> void:
     show_screen("title")
 
 func is_portrait() -> bool:
-    return get_viewport_rect().size.x < 760
+    return _base.x < 760
+
+
+static func responsive_size(native_size: Vector2i, css_size: Vector2i = Vector2i.ZERO) -> Vector2i:
+    # On high-density mobile browsers Godot's window can be measured in backing
+    # pixels (for example 1179 wide on a 393 CSS-pixel iPhone). UI breakpoints
+    # and font sizes must use the browser's CSS viewport instead.
+    var source := css_size if css_size.x > 0 and css_size.y > 0 else native_size
+    var minimum_height := 480 if source.x < 760 else 360
+    return Vector2i(clampi(source.x, 320, 1440), clampi(source.y, minimum_height, 1100))
+
+
+func _css_viewport_size() -> Vector2i:
+    if not OS.has_feature("web"):
+        return Vector2i.ZERO
+    var width := int(JavaScriptBridge.eval(
+        "Math.round(window.visualViewport ? window.visualViewport.width : window.innerWidth)",
+    ))
+    var height := int(JavaScriptBridge.eval(
+        "Math.round(window.visualViewport ? window.visualViewport.height : window.innerHeight)",
+    ))
+    return Vector2i(width, height)
 
 func _apply_base_resolution() -> void:
     var win := get_tree().root
-    var want := Vector2i(clampi(win.size.x, 360, 1440), clampi(win.size.y, 360, 1100))
+    var want := responsive_size(win.size, _css_viewport_size())
     if want == _base: return
     _base = want
     win.content_scale_size = want

@@ -35,7 +35,7 @@ func refresh() -> void:
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
-	mobile = get_viewport_rect().size.x < 760
+	mobile = main.is_portrait() if is_instance_valid(main) else get_viewport_rect().size.x < 760
 	var bg := ColorRect.new()
 	bg.color = NoirKit.BLACK
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -60,7 +60,7 @@ func refresh() -> void:
 	var sound := NoirKit.button("Music: off" if Jukebox.muted else "Music: on",func() -> void: Jukebox.toggle(); refresh())
 	sound.custom_minimum_size.x = 98
 	sound.size_flags_horizontal = Control.SIZE_SHRINK_END
-	sound.add_theme_font_size_override("font_size",15)
+	sound.add_theme_font_size_override("font_size",16)
 	brand.add_child(sound)
 	if page != "title": _hud(root)
 	if GameMan.save_error != OK:
@@ -115,7 +115,7 @@ func _hud(parent: Node) -> void:
 		v.add_child(value)
 	var detail := NoirKit.button("DAY %d   /   %s   /   Resource guide" % [GameMan.day,GameData.rank_name(GameMan.respect)],func() -> void: go("resources"))
 	detail.custom_minimum_size.y = 44
-	detail.add_theme_font_size_override("font_size",15)
+	detail.add_theme_font_size_override("font_size",16)
 	parent.add_child(detail)
 
 func _nav(parent: Node) -> void:
@@ -159,6 +159,7 @@ func picker(parent: Node, available_only: bool = false) -> void:
 	option.custom_minimum_size.y = 48
 	option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	option.fit_to_longest_item = false
+	option.clip_text = true
 	option.add_theme_font_size_override("font_size",18)
 	option.get_popup().add_theme_font_size_override("font_size",18)
 	option.get_popup().add_theme_constant_override("v_separation",26)

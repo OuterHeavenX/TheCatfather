@@ -27,3 +27,9 @@ The browser check covers navigation, location assignment, crime resolution and p
 Contacts, business relationship dimensions, multi-stage scores, live temporary modifiers, bespoke artwork for every venue, advanced territory/factions and wall-clock offline progression remain future work. The Fence retains its existing buy/sell spread; percentage labels honestly compare today's price to its usual price. All daily recovery remains tied to Closing the Books.
 
 Web exports use a content-hashed pack query URL so a newly loaded page cannot reuse an older game pack. The physical file remains `index.pck`; IndexedDB paths do not change.
+
+## High-density mobile browsers
+
+Godot can report the Web canvas in backing pixels on Retina-class phones. A 393 CSS-pixel iPhone may therefore appear roughly 1179 pixels wide to the engine, which previously selected the desktop grid and reduced every font and control to one third of its intended size. `Main` now reads `visualViewport`/`innerWidth` on Web and uses those CSS-pixel dimensions for content scaling and responsive breakpoints. Native builds continue to use the window size directly.
+
+The mobile regression matrix covers every current player-facing destination at 320, 360 and 390 logical pixels. It rejects horizontal overflow, buttons under 43 pixels, and rendered label/button text under 16 pixels. Landscape phone, tablet and desktop sizes remain covered separately.

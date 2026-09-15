@@ -22,12 +22,14 @@ static func box(color: Color, border: Color = BRASS, pad: int = 16) -> StyleBoxF
 
 static func text(value: String, size: int = 18, color: Color = CREAM, display: bool = false) -> Label:
 	var l := Label.new()
+	var readable_size := maxi(size, 16)
 	l.text = value
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l.add_theme_color_override("font_color", color)
-	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_font_size_override("font_size", readable_size)
 	l.add_theme_font_override("font", load(UiKit.FONT_CAPS if display else UiKit.FONT_BODY))
+	l.add_theme_constant_override("line_spacing", 3)
 	return l
 
 static func button(value: String, action: Callable, primary: bool = false) -> Button:

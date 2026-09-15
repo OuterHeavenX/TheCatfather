@@ -11,6 +11,10 @@ func _ready() -> void:
 		push_error("Redesign tests require isolated .audit user data")
 		get_tree().quit(2)
 		return
+	check(Main.responsive_size(Vector2i(1179,2556),Vector2i(393,852))==Vector2i(393,852),"high-density iPhone uses CSS viewport")
+	check(Main.responsive_size(Vector2i(2532,1170),Vector2i(844,390))==Vector2i(844,390),"landscape phone keeps its CSS height")
+	check(Main.responsive_size(Vector2i(390,844))==Vector2i(390,844),"native viewport remains unchanged")
+	check(Main.responsive_size(Vector2i(300,420))==Vector2i(320,480),"minimum mobile layout remains usable")
 	var fixture := FileAccess.get_file_as_string("res://tests/fixtures/legacy_unversioned.cfg")
 	var file := FileAccess.open(GameMan.SAVE_PATH,FileAccess.WRITE)
 	file.store_string(fixture)
@@ -65,7 +69,7 @@ func _ready() -> void:
 	add_child(main_scene)
 	await get_tree().process_frame
 	var shell := main_scene.current as NoirShell
-	for resolution in [Vector2i(360,800),Vector2i(390,844),Vector2i(844,390),Vector2i(768,1024),Vector2i(1440,900)]:
+	for resolution in [Vector2i(320,568),Vector2i(360,800),Vector2i(390,844),Vector2i(844,390),Vector2i(768,1024),Vector2i(1440,900)]:
 		get_tree().root.size=resolution
 		await get_tree().process_frame
 		await get_tree().process_frame
@@ -74,8 +78,14 @@ func _ready() -> void:
 			await get_tree().process_frame
 			await get_tree().process_frame
 			var width := shell.get_viewport_rect().size.x
-			check(shell.body.size.x<=width and shell.body.get_combined_minimum_size().x<=width-20,"%s fits %s" % [page,resolution])
+			var body_minimum := shell.body.get_combined_minimum_size().x
+			var fits := shell.body.size.x<=width and body_minimum<=width-20
+			if not fits:
+				print("WIDTH DETAIL ",page," / ",resolution," body=",shell.body.size.x," minimum=",body_minimum," viewport=",width)
+			check(fits,"%s fits %s" % [page,resolution])
 			check(touch_targets(shell),"%s touch targets %s" % [page,resolution])
+			if resolution.x <= 390:
+				check(readable_type(shell),"%s readable type %s" % [page,resolution])
 	main_scene.queue_free()
 	await get_tree().process_frame
 	print("REDESIGN OK" if failures.is_empty() else "REDESIGN FAILED: "+str(failures))
@@ -85,4 +95,15 @@ func touch_targets(node: Node) -> bool:
 	if node is Button and node.visible and node.size.y<43: return false
 	for child in node.get_children():
 		if not touch_targets(child): return false
+	return true
+
+
+func readable_type(node: Node) -> bool:
+	if node is Label and node.visible and node.get_theme_font_size("font_size")<16:
+		return false
+	if node is Button and node.visible and node.get_theme_font_size("font_size")<16:
+		return false
+	for child in node.get_children():
+		if not readable_type(child):
+			return false
 	return true
