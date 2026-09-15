@@ -48,7 +48,7 @@ The Daily Whisker. Morning Business and Closing the Books preserve the daily loo
 See [the design system](docs/UI_DESIGN_SYSTEM.md) for implementation and scope.
 
 On Web, responsive layout is based on the browser's CSS viewport rather than the high-density canvas backing size. This is required for iPhone and other Retina-class browsers; otherwise a phone can be mistaken for a wide desktop and render the interface at an unreadably small scale.
-Schema 1 migrates unversioned saves and persists the Ledger and news journal.
+Schema 2 adds a saved, replayable first-day tutorial while migrating established saves without interrupting them. The Ledger and news journal remain persistent.
 
 ## Dev
 

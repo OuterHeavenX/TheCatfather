@@ -5,7 +5,8 @@ extends Node
 signal state_changed
 signal day_resolved(report: Dictionary)
 
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
+const TUTORIAL_LAST_STEP := 8
 
 const SAVE_PATH := "user://pawfellas_save.cfg"
 
@@ -61,6 +62,8 @@ var align: String = ""
 var last_report: Dictionary = {}
 var journal: Array = []
 var save_error: int = OK
+var tutorial_step: int = 0
+var tutorial_complete: bool = false
 
 
 func _ready() -> void:
@@ -88,6 +91,8 @@ func new_game() -> void:
 	align = ""
 	last_report = {}
 	journal.clear()
+	tutorial_step = 0
+	tutorial_complete = false
 
 	tariffs.clear()
 	for g in WorldData.goods():
@@ -132,6 +137,8 @@ func save_game() -> void:
 	cfg.set_value("game", "save_version", SAVE_VERSION)
 	cfg.set_value("game", "last_report", last_report)
 	cfg.set_value("game", "journal", journal)
+	cfg.set_value("game", "tutorial_step", tutorial_step)
+	cfg.set_value("game", "tutorial_complete", tutorial_complete)
 	cfg.set_value("game", "day", day)
 	cfg.set_value("game", "phase", phase)
 	cfg.set_value("game", "treats", treats)
@@ -160,7 +167,8 @@ func load_game() -> bool:
 	var cfg := ConfigFile.new()
 	if cfg.load(SAVE_PATH) != OK:
 		return false
-	if int(cfg.get_value("game", "save_version", 0)) > SAVE_VERSION:
+	var loaded_version := int(cfg.get_value("game", "save_version", 0))
+	if loaded_version > SAVE_VERSION:
 		return false
 	# Version 0 (unversioned) saves acquire an empty journal and ledger.
 	last_report = cfg.get_value("game", "last_report", {})
@@ -184,6 +192,14 @@ func load_game() -> bool:
 	story_seen = cfg.get_value("story", "seen", [])
 	story_flags = cfg.get_value("story", "flags", [])
 	align = String(cfg.get_value("story", "align", ""))
+	# The guided tour was introduced in schema 2. Do not interrupt established
+	# empires; only a new game starts it automatically. It can always be replayed.
+	if loaded_version >= 2:
+		tutorial_step = clampi(int(cfg.get_value("game", "tutorial_step", 0)), 0, TUTORIAL_LAST_STEP)
+		tutorial_complete = bool(cfg.get_value("game", "tutorial_complete", false))
+	else:
+		tutorial_step = TUTORIAL_LAST_STEP
+		tutorial_complete = true
 
 	# Fill in anything a save predates.
 	for g in WorldData.goods():
@@ -210,6 +226,31 @@ func load_game() -> bool:
 		_roll_prices()
 	state_changed.emit()
 	return true
+
+
+func tutorial_active() -> bool:
+	return started and not tutorial_complete
+
+
+func set_tutorial_step(value: int) -> void:
+	tutorial_step = clampi(value, 0, TUTORIAL_LAST_STEP)
+	tutorial_complete = false
+	save_game()
+	state_changed.emit()
+
+
+func complete_tutorial() -> void:
+	tutorial_step = TUTORIAL_LAST_STEP
+	tutorial_complete = true
+	save_game()
+	state_changed.emit()
+
+
+func restart_tutorial() -> void:
+	tutorial_step = 0
+	tutorial_complete = false
+	save_game()
+	state_changed.emit()
 
 
 func erase_save() -> void:

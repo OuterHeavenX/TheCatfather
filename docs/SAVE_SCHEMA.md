@@ -1,14 +1,14 @@
 # Save schema and compatibility
 
-Status: schema 1, implemented in the noir city pass. The format remains Godot `ConfigFile` at `user://pawfellas_save.cfg`. On Web, `user://` normally maps to IndexedDB. The loader probes storage and starts in volatile mode if a browser never answers; the new shell displays a persistent warning in this mode.
+Status: schema 2. The format remains Godot `ConfigFile` at `user://pawfellas_save.cfg`. On Web, `user://` normally maps to IndexedDB. The loader probes storage and starts in volatile mode if a browser never answers; the new shell displays a persistent warning in this mode.
 
-Schema 1 adds `game.save_version`, `game.last_report`, and `game.journal`. The journal retains the most recent 24 gameplay events; Ledger reports persist across reloads. Unversioned saves are schema 0: existing fields and IDs load through the original default-fill migration, while the report and journal default to empty. Versions newer than the supported version are rejected without overwriting the save. A checked-in unversioned fixture verifies finances, crew, gear, assignment and story continuity. `save_error` exposes a failed ConfigFile write to the UI. Writes are still direct ConfigFile writes; atomic backup/restore and comprehensive corrupt-input validation remain future hardening work.
+Schema 1 added `game.save_version`, `game.last_report`, and `game.journal`. Schema 2 adds `game.tutorial_step` and `game.tutorial_complete`. New games begin the guided tour and save progress after every step. Schema 0/1 empires migrate with the tour completed so returning players are not interrupted; More can replay it. The journal retains the most recent 24 gameplay events and Ledger reports persist across reloads. Versions newer than the supported version are rejected without overwriting the save. A checked-in unversioned fixture verifies finances, crew, gear, assignment and story continuity. `save_error` exposes a failed ConfigFile write to the UI. Writes are still direct ConfigFile writes; atomic backup/restore and comprehensive corrupt-input validation remain future hardening work.
 
 ## Current saved fields
 
 | Section | Fields |
 |---|---|
-| `game` | save_version, day, phase, treats, respect, heat, tension, payout_level, started, tariffs, venues, cats, stash, nerve, properties, prices, crime_xp, last_report, journal |
+| `game` | save_version, day, phase, treats, respect, heat, tension, payout_level, started, tariffs, venues, cats, stash, nerve, properties, prices, crime_xp, last_report, journal, tutorial_step, tutorial_complete |
 | `story` | seen, flags, align |
 
 `cats[id]` contains hired, level, xp, loyalty, wounded_days, gear, venue, op, energy, jail_days, boosted and train. IDs are save contracts. In particular preserve `frankie_fastpaws`, `jimmy_twotimes`, venue IDs and crime IDs; presentation names can change without breaking saves.

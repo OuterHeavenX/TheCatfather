@@ -98,7 +98,12 @@ func refresh() -> void:
 	if rendered_page != page:
 		body.modulate.a = 0.0
 		create_tween().tween_property(body,"modulate:a",1.0,0.12)
-	rendered_page = page
+		rendered_page = page
+	if page != "title" and GameMan.tutorial_active():
+		var tutorial := TutorialOverlay.new()
+		tutorial.name = "BeginnerTutorial"
+		tutorial.shell = self
+		add_child(tutorial)
 
 func _hud(parent: Node) -> void:
 	var r := NoirKit.row(parent)
@@ -323,5 +328,6 @@ func _more() -> void:
 	var grid := NoirKit.columns(body,mobile)
 	for data in [["home","THE BACK ROOM"],["news","THE DAILY WHISKER"],["gym","THE ALLEY GYM"],["fence","THE FENCE & STASH"],["morning","MORNING BUSINESS"],["ops","CITY OPERATIONS"],["ledger","LAST NIGHT'S LEDGER"],["recruit","RECRUIT THE FAMILY"],["resources","RESOURCE GUIDE"]]:
 		action(grid,data[1],func() -> void: go(data[0]))
+	action(body,"REPLAY BEGINNER TOUR",func() -> void: GameMan.restart_tutorial(); go("home"))
 	action(body,"SAVE PROGRESS",func() -> void: GameMan.save_game(); notify("Saved locally." if GameMan.save_error==OK else "Save failed. Keep this session open."))
 	action(body,"TITLE SCREEN",func() -> void: go("title"))

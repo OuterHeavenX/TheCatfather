@@ -24,10 +24,20 @@ func _ready() -> void:
 	check(GameMan.cats.jimmy_twotimes.gear=="crowbar" and GameMan.cats.jimmy_twotimes.venue=="blind_pig","legacy IDs, gear and assignments preserved")
 	check(GameMan.story_flags.has("paid_nicky") and GameMan.align=="don","legacy story preserved")
 	check(GameMan.journal.is_empty() and GameMan.last_report.is_empty(),"version 0 new fields default safely")
+	check(GameMan.tutorial_complete,"legacy empire is not interrupted by tutorial")
 	GameMan.save_game()
 	var cfg := ConfigFile.new()
 	cfg.load(GameMan.SAVE_PATH)
-	check(int(cfg.get_value("game","save_version",-1))==1,"explicit schema version written")
+	check(int(cfg.get_value("game","save_version",-1))==2,"explicit schema version written")
+	GameMan.new_game()
+	check(GameMan.tutorial_active() and GameMan.tutorial_step==0,"new empire starts beginner tutorial")
+	GameMan.set_tutorial_step(4)
+	check(GameMan.load_game() and GameMan.tutorial_step==4 and GameMan.tutorial_active(),"tutorial progress survives reload")
+	GameMan.complete_tutorial()
+	check(GameMan.load_game() and GameMan.tutorial_complete,"tutorial completion survives reload")
+	GameMan.restart_tutorial()
+	check(GameMan.tutorial_step==0 and GameMan.tutorial_active(),"tutorial can be replayed")
+	GameMan.complete_tutorial()
 	GameMan.new_game()
 	var cid := "jimmy_twotimes"
 	var preview := GameMan.crime_chance(cid,"milk_bottle")
@@ -69,6 +79,15 @@ func _ready() -> void:
 	add_child(main_scene)
 	await get_tree().process_frame
 	var shell := main_scene.current as NoirShell
+	shell.go("home")
+	get_tree().root.size=Vector2i(320,568)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	check(shell.has_node("BeginnerTutorial"),"first-run tutorial appears in the live shell")
+	check(touch_targets(shell.get_node("BeginnerTutorial")),"tutorial uses mobile touch targets")
+	check(readable_type(shell.get_node("BeginnerTutorial")),"tutorial uses readable mobile type")
+	GameMan.complete_tutorial()
+	shell.refresh()
 	for resolution in [Vector2i(320,568),Vector2i(360,800),Vector2i(390,844),Vector2i(844,390),Vector2i(768,1024),Vector2i(1440,900)]:
 		get_tree().root.size=resolution
 		await get_tree().process_frame
