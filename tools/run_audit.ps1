@@ -34,6 +34,7 @@ try {
         @{Name='import'; Args=@('--headless','--path','.','--editor','--quit')},
         @{Name='startup'; Args=@('--headless','--path','.','--quit-after','90')},
         @{Name='smoke'; Args=@('--headless','--path','.','tests/smoke.tscn')},
+        @{Name='redesign'; Args=@('--headless','--path','.','tests/redesign.tscn')},
         @{Name='audit-probe'; Args=@('--headless','--path','.','tests/audit_probe.tscn')}
     )) {
         $taskArguments = $taskCase.Args

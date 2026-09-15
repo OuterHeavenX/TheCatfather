@@ -238,6 +238,7 @@ func _test_widths() -> void:
 	GameMan.cats[GameMan.hired_cats()[1] as String]["jail_days"] = 2
 	GameMan.cats[GameMan.hired_cats()[2] as String]["wounded_days"] = 2
 
+	get_tree().root.size = Vector2i(440, 900)
 	var main_scene := load("res://main.tscn").instantiate() as Main
 	get_tree().root.add_child.call_deferred(main_scene)
 	await get_tree().process_frame

@@ -86,9 +86,9 @@ func _layout_probe() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	main_scene.show_screen("ops")
-	var ops: OpsScreen = main_scene.current
-	ops._picking_venue = "blind_pig"
-	ops._picking_op = WorldData.OP_COLLECT
+	var ops: NoirShell = main_scene.current
+	ops.venue_id = "blind_pig"
+	ops.operation = WorldData.OP_COLLECT
 	ops.refresh()
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -97,7 +97,7 @@ func _layout_probe() -> void:
 		GameMan.cats[cid]["hired"] = true
 	for cid in GameMan.hired_cats():
 		GameMan.assign_cat(cid, "blind_pig", WorldData.OP_COLLECT)
-	ops._picking_venue = ""
+	ops.page = "ops"
 	ops.refresh()
 	await get_tree().process_frame
 	await get_tree().process_frame
