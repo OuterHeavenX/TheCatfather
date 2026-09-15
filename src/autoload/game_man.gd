@@ -5,6 +5,8 @@ extends Node
 signal state_changed
 signal day_resolved(report: Dictionary)
 
+const SAVE_VERSION := 1
+
 const SAVE_PATH := "user://pawfellas_save.cfg"
 
 const PHASE_DESK := "desk"
@@ -57,6 +59,8 @@ var story_flags: Array = []
 var align: String = ""
 
 var last_report: Dictionary = {}
+var journal: Array = []
+var save_error: int = OK
 
 
 func _ready() -> void:
@@ -83,6 +87,7 @@ func new_game() -> void:
 	story_flags.clear()
 	align = ""
 	last_report = {}
+	journal.clear()
 
 	tariffs.clear()
 	for g in WorldData.goods():
@@ -124,6 +129,9 @@ func _fresh_cat(hired: bool) -> Dictionary:
 
 func save_game() -> void:
 	var cfg := ConfigFile.new()
+	cfg.set_value("game", "save_version", SAVE_VERSION)
+	cfg.set_value("game", "last_report", last_report)
+	cfg.set_value("game", "journal", journal)
 	cfg.set_value("game", "day", day)
 	cfg.set_value("game", "phase", phase)
 	cfg.set_value("game", "treats", treats)
@@ -143,7 +151,7 @@ func save_game() -> void:
 	cfg.set_value("story", "seen", story_seen)
 	cfg.set_value("story", "flags", story_flags)
 	cfg.set_value("story", "align", align)
-	cfg.save(SAVE_PATH)
+	save_error = cfg.save(SAVE_PATH)
 
 
 func load_game() -> bool:
@@ -152,6 +160,11 @@ func load_game() -> bool:
 	var cfg := ConfigFile.new()
 	if cfg.load(SAVE_PATH) != OK:
 		return false
+	if int(cfg.get_value("game", "save_version", 0)) > SAVE_VERSION:
+		return false
+	# Version 0 (unversioned) saves acquire an empty journal and ledger.
+	last_report = cfg.get_value("game", "last_report", {})
+	journal = cfg.get_value("game", "journal", [])
 	day = int(cfg.get_value("game", "day", 1))
 	phase = String(cfg.get_value("game", "phase", PHASE_DESK))
 	treats = int(cfg.get_value("game", "treats", 240))
@@ -224,12 +237,16 @@ func pending_beat() -> Dictionary:
 
 func resolve_beat(beat_id: String, choice_index: int) -> String:
 	var b := StoryData.beat_by_id(beat_id)
-	if b.is_empty():
+	if b.is_empty() or beat_id in story_seen or String(pending_beat().get("id", "")) != beat_id:
 		return ""
 	var reply := ""
 	var choices: Array = b.get("choices", [])
+	if not choices.is_empty() and (choice_index < 0 or choice_index >= choices.size()):
+		return ""
 	if choice_index >= 0 and choice_index < choices.size():
 		var ch: Dictionary = choices[choice_index]
+		if treats + int(ch.get("treats", 0)) < 0:
+			return ""
 		treats += int(ch.get("treats", 0))
 		heat = clampf(heat + float(ch.get("heat", 0)), 0.0, 100.0)
 		tension = clampf(tension + float(ch.get("tension", 0)), 0.0, 100.0)
@@ -523,9 +540,8 @@ func commit_crime(cat_id: String, crime_id: String) -> Dictionary:
 	var c := CrimeData.crime_by_id(crime_id)
 	nerve -= int(c["nerve"])
 	spend_energy(cat_id, int(c["energy"]))
-	crime_xp[crime_id] = crime_runs(crime_id) + 1
-
 	var chance := crime_chance(cat_id, crime_id)
+	crime_xp[crime_id] = crime_runs(crime_id) + 1
 	var success := randf() < chance
 	var out := {
 		"crime": crime_id, "cat": cat_id, "success": success, "chance": chance,
@@ -554,6 +570,7 @@ func commit_crime(cat_id: String, crime_id: String) -> Dictionary:
 			cats[cat_id]["venue"] = ""
 			cats[cat_id]["op"] = ""
 
+	record_event(String(c["name"]).to_upper() + (" — CLEAN GETAWAY" if success else " — TROUBLE"), String(GameData.cat_by_id(cat_id)["name"]) + ": " + String(out["text"]))
 	out["levelled"] = add_xp(cat_id, int(c["xp"]) * (2 if success else 1))
 	save_game()
 	state_changed.emit()
@@ -641,6 +658,7 @@ func buy_property(property_id: String) -> bool:
 	var pr := WorldData.property_by_id(property_id)
 	treats -= int(pr["cost"])
 	properties.append(property_id)
+	record_event("NEW KEYS IN THE FAMILY", String(pr["name"]) + " joins the books. " + String(pr["perk"]))
 	# A bed and a bath do their work from the moment you hold the keys.
 	if property_id == "flophouse":
 		for cid in hired_cats():
@@ -723,6 +741,10 @@ func venue_op(venue_id: String) -> String:
 
 
 func assign_cat(cat_id: String, venue_id: String, op: String) -> bool:
+	if not cats.has(cat_id) or WorldData.venue_by_id(venue_id).is_empty() or op not in [WorldData.OP_COLLECT, WorldData.OP_SHAKEDOWN]:
+		return false
+	if String(cats[cat_id]["venue"]) != "":
+		return false
 	if not is_cat_available(cat_id):
 		return false
 	if not venue_unlocked(venue_id):
@@ -799,6 +821,8 @@ func yield_range(venue_id: String, op: String) -> Vector2i:
 # ---------------------------------------------------------------- ledger
 
 func end_day() -> Dictionary:
+	var opening_cash := treats
+	var opening_heat := heat
 	var report := {
 		"day": day,
 		"ops": [],
@@ -898,6 +922,7 @@ func end_day() -> Dictionary:
 	report["payout"] = payout
 	if treats >= payout:
 		treats -= payout
+		report["paid_payroll"] = payout
 		for cid in hired_cats():
 			cats[cid]["loyalty"] = clampi(int(cats[cid]["loyalty"]) + WorldData.PAYOUT_LOYALTY[payout_level], 0, 100)
 	else:
@@ -910,6 +935,7 @@ func end_day() -> Dictionary:
 	report["bribes"] = bribes
 	if treats >= bribes:
 		treats -= bribes
+		report["paid_bribes"] = bribes
 		heat = maxf(0.0, heat - 6.0)
 	else:
 		heat = clampf(heat + 8.0, 0.0, 100.0)
@@ -958,7 +984,12 @@ func end_day() -> Dictionary:
 	_roll_prices()
 	day += 1
 	phase = PHASE_DESK
+	report["net"] = treats - opening_cash
+	report["heat_change"] = heat - opening_heat
 	last_report = report
+	record_event("THE BOOKS CLOSE", "Day %d: %+d T settled. %d T from protection; %d T from holdings." % [int(report["day"]),int(report["net"]),int(report["protection"]),int(report["holdings"])])
+	if String(report["rival"]) != "":
+		record_event("ALLEY SYNDICATE MAKES A MOVE", String(report["rival"]))
 	save_game()
 	day_resolved.emit(report)
 	state_changed.emit()
@@ -1041,3 +1072,9 @@ func use_item(item_id: String, cat_id: String = "") -> String:
 	save_game()
 	state_changed.emit()
 	return msg
+
+
+func record_event(title: String, body: String) -> void:
+	journal.append({"day": day, "title": title, "body": body})
+	while journal.size() > 24:
+		journal.pop_front()

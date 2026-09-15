@@ -40,6 +40,8 @@ func _input(_event: InputEvent) -> void:
 
 
 func _start() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
 	if muted or _player.playing:
 		return
 	_player.play()
