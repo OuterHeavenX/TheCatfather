@@ -2,7 +2,7 @@
 
 A mobster-cat crew empire. Recruit mobsters, run heists, become **Don of the House**.
 
-Godot 4.7 2D pixel-art game, built for the browser. Live at
+Godot 4.7.2 browser crime RPG, built for the browser. Live at
 https://outerheavenx.github.io/TheCatfather/
 
 ## Play
@@ -38,9 +38,21 @@ quietly bend a rule of the game for as long as you hold them.
 Nine story chapters unfold across the first sixteen days, with choices that
 decide where you land: with the Don, with Carmela, or on top of both.
 
+## Noir city redesign
+
+The new Back Room anchors a responsive City / Racket / Crew / Empire / More shell.
+Explore districts and existing venues, reserve collections and shakedowns, read
+crime files, manage family dossiers, train, trade, acquire holdings, and read
+The Daily Whisker. Morning Business and Closing the Books preserve the daily loop.
+
+See [the design system](docs/UI_DESIGN_SYSTEM.md) for implementation and scope.
+Schema 1 migrates unversioned saves and persists the Ledger and news journal.
+
 ## Dev
 
-- Godot 4.7.2, GL Compatibility renderer, 640x360 canvas_items stretch
+- Godot 4.7.2, GL Compatibility renderer, responsive canvas_items stretch
+- `src/ui/noir_shell.gd`, `noir_kit.gd`, `noir_activities.gd`, `noir_business.gd` — new UI
+- `src/data/city_data.gd`, `src/ui/city_map.gd` — district/location presentation
 - `src/autoload/game_man.gd` — empire state, the day cycle, save/load
 - `src/data/game_data.gd` — 25-cat roster, traits, rank ladder
 - `src/data/world_data.gd` — venues, tariffs, items, gym regimens, holdings
@@ -74,7 +86,7 @@ regression suite. The production audit, architecture and roadmap are in
 [`docs/`](docs/).
 
 `tests/smoke.tscn` also measures what every screen demands in width and fails
-if anything needs more than the 440 logical pixels a phone held upright gets.
+if anything needs more than its tested 440-pixel layout. The redesign regression suite additionally covers 360/390-pixel phones, landscape, tablets and desktop.
 A ScrollContainer reports a tiny minimum of its own, so that number has to be
 walked out of the tree by hand — see `_widest()` — but it is the check that
 catches portrait overflow before a player does.

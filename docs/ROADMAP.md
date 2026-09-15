@@ -1,6 +1,10 @@
 # Production roadmap
 
-Order follows the audit rather than the initial sequence exactly: repair verifiable trust issues before asking players to invest in a larger City.
+The noir city pass implements the navigation, Back Room, City/location framework, crime files, Family profiles, Gym, Fence, Empire deeds and Daily Whisker, while preserving the daily loop. It also fixes crime-preview, assignment, story-choice and Ledger trust defects and introduces save schema 1. See [implementation and validation](UI_DESIGN_SYSTEM.md).
+
+Next production pass: deepen two existing locations with contacts and saved relationships, add one consequential daily city modifier, and complete physical-device Safari/touch validation. More bespoke venue art and character-art consistency should accompany this work. Multi-stage scores and territory follow once those foundations are proven.
+
+The table below retains the broader production sequence; individual presentation and health outcomes are already delivered, while deeper mechanics remain planned.
 
 | Pass | Outcome | Exit gate |
 |---|---|---|
@@ -16,4 +20,4 @@ Order follows the audit rather than the initial sequence exactly: repair verifia
 
 Do not start a real-time clock, multiplayer, cloud accounts, player trading, PvP, leaderboards or global territory competition during these passes. Reassess persistence authority after Pass 7, when the game has a stable event model and evidence from actual player behavior.
 
-Every pass works on `dev/*`, has a focused commit, retains an up-to-date Web export only when shipped Web assets changed, and records Godot version, smoke result, save fixtures and web-loader result. Do not regenerate root `index.*` just because code changed; regenerate it only for a release-ready Web pass and run `tools/patch_web_shell.py` immediately afterward.
+Every pass works on a development branch (`dev/*` or `feat/*`), has a focused commit, retains an up-to-date Web export only when shipped Web assets changed, and records Godot version, smoke result, save fixtures and web-loader result. Do not regenerate root `index.*` just because code changed; regenerate it only for a release-ready Web pass and run `tools/patch_web_shell.py` immediately afterward.

@@ -2,12 +2,21 @@
 // APIs and a deterministic clock. This is not a Safari device test.
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { createHash } from 'node:crypto';
+import { dirname, join } from 'node:path';
 import assert from 'node:assert/strict';
 
 // HTML declares UTF-8. Windows' default code page must never leak into it.
 const html = new TextDecoder('utf-8', { fatal: true }).decode(readFileSync(process.argv[2] || 'index.html'));
 const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1];
 assert.match(inline, /GODOT_THREADS_ENABLED = false/);
+const packConfig = JSON.parse(inline.match(/const GODOT_CONFIG = (\{[^\n]+\});/)[1]);
+const packName = packConfig.executable + '.pck';
+const packBytes = readFileSync(join(dirname(process.argv[2] || 'index.html'), packName));
+const revision = createHash('sha256').update(packBytes).digest('hex').slice(0,16);
+assert.equal(packConfig.mainPack, `${packName}?build=${revision}`);
+assert.equal(packConfig.fileSizes[packConfig.mainPack], packBytes.length);
+console.log('PASS pack URL identifies the actual exported content');
 
 async function boot(storage, engineMode = 'ready') {
   let now = 0, sequence = 0, config, started = 0;
@@ -57,21 +66,23 @@ async function boot(storage, engineMode = 'ready') {
     await settle();
   }
   if (storage === 'hang') await advance(5000);
-  return { elements, warnings, errors, advance, config, started };
+  return { elements, warnings, errors, advance, config, started, volatile: context.window.catfatherVolatile };
 }
 
 const healthy = await boot('healthy');
 assert.equal(healthy.started, 1);
+assert.equal(healthy.volatile, false);
 assert.equal(healthy.config.persistentPaths, undefined);
 assert.equal(healthy.elements.status.removed, true);
 console.log('PASS healthy storage preserves engine persistence configuration');
 for (const mode of ['throw', 'error', 'blocked', 'hang']) {
   const result = await boot(mode);
   assert.equal(result.started, 1);
+  assert.equal(result.volatile, true);
   assert.equal(result.config.persistentPaths.length, 0);
   assert.equal(result.elements.status.removed, true);
   assert.equal(result.warnings.length, 1);
-  console.log(`PASS ${mode} storage boots in volatile mode (console warning only)`);
+  console.log(`PASS ${mode} storage boots in volatile mode (player warning flag set)`);
 }
 const stalled = await boot('healthy', 'hang');
 await stalled.advance(45000);

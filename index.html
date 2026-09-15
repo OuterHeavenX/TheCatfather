@@ -2,9 +2,10 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<title>The Catfather</title>
 		<style>
+:root { --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); --safe-left: env(safe-area-inset-left, 0px); --safe-right: env(safe-area-inset-right, 0px); }
 html, body, #canvas {
 	margin: 0;
 	padding: 0;
@@ -121,7 +122,7 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":3677308,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":13202676,"index.wasm":39514754,"index.pck?build=074713d9bf81601d":13202676},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"mainPack":"index.pck?build=074713d9bf81601d"};
 const GODOT_THREADS_ENABLED = false;
 // NOTE: hand-patched after export. See "Web export" in README.md before
 // regenerating this file — a plain re-export drops the boot fallbacks below.
@@ -143,6 +144,7 @@ let engine = null;
 	let statusMode = '';
 	let stage = 'loading the engine';
 	let storageState = 'not checked yet';
+	window.catfatherVolatile = false;
 	let loaded = 0;
 	let total = 0;
 	let stallTimer = null;
@@ -347,6 +349,7 @@ let engine = null;
 				// is lost between sessions, but the game boots.
 				console.warn('IndexedDB unavailable, running without persistent saves:', storageState);
 				GODOT_CONFIG['persistentPaths'] = [];
+				window.catfatherVolatile = true;
 			}
 			startEngine();
 		});

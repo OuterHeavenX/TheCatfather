@@ -1,29 +1,29 @@
 # Save schema and compatibility
 
-Status: audit baseline. The current format is Godot `ConfigFile` at `user://pawfellas_save.cfg`. On Web, `user://` normally maps to IndexedDB. The loader probes storage and deliberately starts in volatile mode if a browser never answers; the game must then explain that persistence is unavailable without blocking play.
+Status: schema 1, implemented in the noir city pass. The format remains Godot `ConfigFile` at `user://pawfellas_save.cfg`. On Web, `user://` normally maps to IndexedDB. The loader probes storage and starts in volatile mode if a browser never answers; the new shell displays a persistent warning in this mode.
+
+Schema 1 adds `game.save_version`, `game.last_report`, and `game.journal`. The journal retains the most recent 24 gameplay events; Ledger reports persist across reloads. Unversioned saves are schema 0: existing fields and IDs load through the original default-fill migration, while the report and journal default to empty. Versions newer than the supported version are rejected without overwriting the save. A checked-in unversioned fixture verifies finances, crew, gear, assignment and story continuity. `save_error` exposes a failed ConfigFile write to the UI. Writes are still direct ConfigFile writes; atomic backup/restore and comprehensive corrupt-input validation remain future hardening work.
 
 ## Current saved fields
 
 | Section | Fields |
 |---|---|
-| `game` | day, phase, treats, respect, heat, tension, payout_level, started, tariffs, venues, cats, stash, nerve, properties, prices, crime_xp |
+| `game` | save_version, day, phase, treats, respect, heat, tension, payout_level, started, tariffs, venues, cats, stash, nerve, properties, prices, crime_xp, last_report, journal |
 | `story` | seen, flags, align |
 
 `cats[id]` contains hired, level, xp, loyalty, wounded_days, gear, venue, op, energy, jail_days, boosted and train. IDs are save contracts. In particular preserve `frankie_fastpaws`, `jimmy_twotimes`, venue IDs and crime IDs; presentation names can change without breaking saves.
 
-`last_report` is currently runtime-only. Reloading after end of day loses the Ledger detail, even though the settlement has already occurred. Jukebox settings are separately saved in `user://pawfellas_audio.cfg`.
+`last_report` now persists. New reports distinguish payroll/bribes due from amounts actually paid and record actual net cash movement including rival losses. Jukebox settings are separately saved in `user://pawfellas_audio.cfg`.
 
 ## What works today
 
 Loading fills defaults for new tariffs, venues, roster entries, Jimmy's hired status, Racket per-cat fields and empty prices. A synthetic pre-Racket save migrated and round-tripped in the audit. The shipped smoke test also covers save/write/load during a 20-day simulation.
 
-## Required repair before major data expansion
+## Remaining hardening before major data expansion
 
-Add `game.save_version` and a pure, ordered migration chain. `load_game()` should read a version, normalize types, migrate in order, validate references, retain unknown data where safe, save the upgraded result only after successful validation, then report a structured error on failure. Never use a field's absence as the only record of a version once migrations multiply.
+Schema 1 implements explicit versioning, legacy default filling, write-error reporting and bounded report/journal persistence. Future migrations should become a pure, ordered chain as the schema grows. Normalize types, validate references, retain unknown data where safe, and use an atomic backup/restore strategy. Corrupt input and interrupted writes need stronger coverage; the current fixture tests do not certify those paths.
 
-Save mutations must report failure. `ConfigFile.save()` return values are currently ignored. UI needs a non-blocking, accessible notice when Web persistence is disabled or a write fails. Keep running in volatile mode, but do not imply that progress will survive a reload.
-
-Persist a bounded `last_report` or event journal before changing Ledger navigation. Event IDs must be idempotent: reloading or reopening an event must not pay, heal, release, collect, or advance practice twice.
+Event handling must remain idempotent: reloading or reopening a report must not pay, heal, release, collect, or advance practice twice. Existing crime, assignment and story regression cases now guard the defects found in the initial audit.
 
 ## Future state shape
 

@@ -1,12 +1,12 @@
 # City architecture
 
-Status: proposed; no City, district or contact system exists in MAIN. Existing venue IDs are the integration boundary. See [audit](AUDIT.md).
+Status: initial district/location architecture implemented on `feat/noir-city-redesign`. See [UI design system](UI_DESIGN_SYSTEM.md) for current screen ownership and [original audit](AUDIT.md) for the inherited baseline.
 
-## Initial slice
+## Implemented slice
 
-Start with Little Italy and the Docks as a small linked hub. Little Italy contains `blind_pig`, `piazza`, `tailor`, `hardware`, the Gym and the Fence. The Docks contains `fishmonger`; reveal further addresses gradually. Existing saves must retain access to every venue they already unlocked, regardless of new district gates. Midtown, the Tenements and Uptown can appear as future destinations, with an explanation rather than empty menus.
+`CityData` contains district definitions. `CityMap` renders a real interactive map, and `NoirShell` renders district and location views. Little Italy contains `blind_pig` and `piazza`, with the Gym and Fence nearby. The Tenements contains `hardware`; the Docks contains `fishmonger`; Midtown contains `tailor`. Gates use those venues' existing respect requirements (0, 4, 10, 16); Uptown is explicitly a future district. Existing unlocked venues remain accessible.
 
-Use a readable district list plus an optional illustrated map. Location cards open a reusable detail screen: art, name, owner/contact, description, control, local conditions, relationship summary and available actions. Unknown information is explicitly unknown. Do not display invented heat, ownership or relationship numbers to fill a template.
+Location details expose real control, unrest, global police attention, injury risk, payouts, stat requirements, crew selection and collection/shakedown reservation. Unsupported owners, relationship numbers and pretend contact actions are not displayed. Existing venue IDs and mutable state remain authoritative. The structure below describes future extensions, not additional implemented systems.
 
 ## Separate definitions from state
 
@@ -17,7 +17,7 @@ Use a readable district list plus an optional illustrated map. Location cards op
 | Action | ID, handler, permitted context, preview text | any reservation or operation instance, never a UI node |
 | Contact | ID, character reference or portrait, role, home locations | introduced, trust/fear/favor balance, cooldowns |
 
-Begin with `src/data/city_data.gd`, `src/city/city_service.gd` and `src/ui/city_screen.gd` / `location_screen.gd`. Fit existing project conventions; no global directory reshuffle. Keep GameMan as a compatibility facade while services are extracted behind it. Static data must not hold mutable save dictionaries.
+The initial implementation uses `src/data/city_data.gd`, `src/ui/city_map.gd` and the shared shell. Extract a city service when saved city behavior grows beyond mapping existing venues. Fit existing project conventions; no global directory reshuffle. Keep GameMan as a compatibility facade while services are extracted behind it. Static data must not hold mutable save dictionaries.
 
 ## Reuse the actual systems
 

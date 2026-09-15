@@ -22,6 +22,9 @@ What it restores, and why:
 """
 
 import sys
+import json
+import hashlib
+import re
 from pathlib import Path
 
 LOADER = r"""// NOTE: hand-patched after export. See "Web export" in README.md before
@@ -44,6 +47,7 @@ let engine = null;
 	let statusMode = '';
 	let stage = 'loading the engine';
 	let storageState = 'not checked yet';
+	window.catfatherVolatile = false;
 	let loaded = 0;
 	let total = 0;
 	let stallTimer = null;
@@ -248,6 +252,7 @@ let engine = null;
 				// is lost between sessions, but the game boots.
 				console.warn('IndexedDB unavailable, running without persistent saves:', storageState);
 				GODOT_CONFIG['persistentPaths'] = [];
+				window.catfatherVolatile = true;
 			}
 			startEngine();
 		});
@@ -292,10 +297,34 @@ NEW_BODY = """			<progress id="status-progress"></progress>
 
 def main() -> int:
     path = Path(sys.argv[1] if len(sys.argv) > 1 else "index.html")
-    html = path.read_text(encoding="utf-8")
+    original = path.read_text(encoding="utf-8")
+    html = original
+    # Static hosts may retain the previous pack in cache after a new HTML load.
+    # Give each content revision its own URL without changing IndexedDB paths.
+    match = re.search(r"const GODOT_CONFIG = (\{[^\n]+\});", html)
+    if match:
+        config = json.loads(match.group(1))
+        pack_name = config["executable"] + ".pck"
+        pack_path = path.parent / pack_name
+        if pack_path.exists():
+            revision = hashlib.sha256(pack_path.read_bytes()).hexdigest()[:16]
+            pack_url = pack_name + "?build=" + revision
+            config["mainPack"] = pack_url
+            config["fileSizes"] = {k:v for k,v in config.get("fileSizes", {}).items() if not k.startswith(pack_name + "?")}
+            config["fileSizes"][pack_url] = pack_path.stat().st_size
+            html = html[:match.start(1)] + json.dumps(config, separators=(",", ":")) + html[match.end(1):]
+    if "viewport-fit=cover" not in html:
+        html = html.replace(
+            "user-scalable=no, initial-scale=1.0",
+            "user-scalable=no, initial-scale=1.0, viewport-fit=cover",
+        )
+    if "--safe-top:" not in html:
+        html = html.replace("<style>", "<style>\n:root { --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); --safe-left: env(safe-area-inset-left, 0px); --safe-right: env(safe-area-inset-right, 0px); }", 1)
 
     if "probeStorage" in html:
-        print(f"{path}: already patched, nothing to do")
+        if html != original:
+            path.write_text(html, encoding="utf-8")
+        print(f"{path}: loader already patched; metadata current")
         return 0
 
     for old in (OLD_POS, OLD_CSS, OLD_BODY):
